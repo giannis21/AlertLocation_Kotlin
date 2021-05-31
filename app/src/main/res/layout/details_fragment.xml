@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/holo_blue_dark"
+
+    tools:context=".ui.add_route.DetailsFragment">
+
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:layout_width="match_parent"
+        android:id="@+id/motionId"
+        android:layout_height="wrap_content"
+        app:layoutDescription="@xml/details_fragment_scene"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="50dp"
+
+            android:visibility="visible"
+            app:endIconMode="clear_text"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/searchHereEdittext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:hint="Search users"
+                android:textColor="@android:color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+<!--        <com.google.android.material.textfield.TextInputLayout-->
+<!--            android:id="@+id/route_name"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="10dp"-->
+<!--            android:layout_marginTop="10dp"-->
+<!--            android:layout_marginEnd="50dp"-->
+<!--            android:visibility="gone"-->
+<!--            app:endIconMode="clear_text"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            tools:visibility="visible">-->
+
+<!--            <com.google.android.material.textfield.TextInputEditText-->
+<!--                android:id="@+id/route_name1"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:hint="Search users"-->
+<!--                android:textColor="@android:color/black" />-->
+<!--        </com.google.android.material.textfield.TextInputLayout>-->
+
+
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_marginHorizontal="16dp"
+            android:alpha="0"
+            android:background="@drawable/edittext_style"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="3dp"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="16dp" />
+        <!--    android:background="@drawable/edittext_style"-->
+        <ImageView
+            android:id="@+id/message_icon"
+            android:layout_width="33dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="5dp"
+            android:src="@drawable/ic_message_black_24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/text_input_layout"
+            app:layout_constraintEnd_toEndOf="@+id/parent"
+            app:layout_constraintStart_toEndOf="@+id/text_input_layout"
+            app:layout_constraintTop_toTopOf="@+id/text_input_layout" />
+
+        <ImageView
+            android:id="@+id/saved_icon"
+            android:layout_width="33dp"
+            android:alpha="0"
+            android:layout_height="33dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/ic_save"
+            app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout2"
+            app:tint="@color/teal_200" />
+
+        <EditText
+            android:id="@+id/message_id1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@null"
+            android:ems="10"
+            android:gravity="top|left"
+            android:hint="@string/write_your_message"
+            android:inputType="textMultiLine"
+            android:padding="5dp"
+            android:scrollbars="vertical"
+            android:typeface="normal"
+            app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout2"
+            app:layout_constraintStart_toEndOf="@+id/message_icon"
+            app:layout_constraintTop_toTopOf="@+id/linearLayout2" />
+
+
+    </androidx.constraintlayout.motion.widget.MotionLayout>
+    <TextView
+        android:id="@+id/okay1"
+        android:layout_width="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_height="30dp"
+        android:layout_marginTop="8sp"
+        android:background="@drawable/background_okay"
+        android:foreground="?selectableItemBackground"
+        android:gravity="center"
+        android:text="okay"
+        android:layout_marginHorizontal="10dp"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@+id/motionId"
+         />
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:foregroundGravity="center"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@+id/recyclerview"
+        app:layout_constraintTop_toBottomOf="@+id/motionId"
+        tools:layout_height="30dp" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview"
+
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/okay1" />
+</androidx.constraintlayout.widget.ConstraintLayout>
