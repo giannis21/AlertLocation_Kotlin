@@ -213,6 +213,9 @@ class DetailsFragment : Fragment() {
             val chip = Chip(context)
             chip.text = user.username
             chip.tag = user.token
+            chip.textSize=14f
+            chip.chipIcon = ContextCompat.getDrawable(requireContext(),R.drawable.ic_save)
+
             chip.setChipBackgroundColorResource(R.color.teal_200)
             chip.isCloseIconVisible = true
             chip.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))

@@ -24,7 +24,7 @@ class DetailsViewModel : ViewModel() {
 
     fun addUsers(newUsers: MutableList<User>) {
         newUsers.forEachIndexed { index, user ->
-             val userToBeAdded= usersToSend.value?.firstOrNull { it.token == user.token }
+             val userToBeAdded= usersToSend.value?.firstOrNull { it.username == user.username }
              if(userToBeAdded == null)
                  addUser(user)
         }
