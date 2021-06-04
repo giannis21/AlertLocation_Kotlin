@@ -134,19 +134,19 @@ class DetailsFragment : Fragment() {
                 })
 
         message_id1.afterTextChanged { searchText ->
-
-            saved_icon.alpha = 0f
-            linearLayout2.background = ContextCompat.getDrawable(requireContext(), R.drawable.edittext_style)
-            lifecycleScope.launch(Dispatchers.Main) {
-                handler.removeCallbacksAndMessages(null)
-                handler.postDelayed({
-                    if (searchText.length == message_id1.text.length) {
-                        viewModel.message?.postValue(searchText)
-                        animateSaveIcon()
-                    }
-                }, 1500)
-
-            }
+            viewModel.message?.postValue(searchText)
+//            saved_icon.alpha = 0f
+//            linearLayout2.background = ContextCompat.getDrawable(requireContext(), R.drawable.edittext_style)
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                handler.removeCallbacksAndMessages(null)
+//                handler.postDelayed({
+//                    if (searchText.length == message_id1.text.length) {
+//                        viewModel.message?.postValue(searchText)
+//                        animateSaveIcon()
+//                    }
+//                }, 1500)
+//
+//            }
 
         }
 

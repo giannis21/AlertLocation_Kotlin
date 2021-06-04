@@ -1,8 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
+
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.add_route.MapsFragment" />
+    android:layout_height="match_parent">
+
+    <fragment
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:id="@+id/map"
+        android:layout_height="match_parent"
+        tools:context=".ui.add_route.MapsFragment" />
+
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:id="@+id/actionsContainer"
+        android:background="@drawable/background_rounded_map"
+        android:orientation="vertical"
+        android:translationX="90dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.39">
+
+        <ImageView
+            android:id="@+id/findMe"
+            android:layout_width="46dp"
+            android:layout_height="55dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_baseline_gps_fixed_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/view1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cardview_dark_background" />
+
+        <ImageView
+            android:layout_width="46dp"
+            android:layout_height="51dp"
+            android:id="@+id/add_points"
+            android:padding="6dp"
+            android:src="@drawable/add_point_in_map"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/view2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cardview_dark_background" />
+
+        <ImageView
+            android:layout_width="46dp"
+            android:layout_height="55dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_baseline_gps_fixed_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="52dp"
+        android:alpha="0.5"
+        android:visibility="gone"
+        android:clickable="true"
+        android:backgroundTint="@color/redTransparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_baseline_clear_24" />
+</androidx.constraintlayout.widget.ConstraintLayout>
