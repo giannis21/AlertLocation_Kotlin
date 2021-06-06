@@ -10,7 +10,7 @@ class DetailsViewModel : ViewModel() {
     var route_name: MutableLiveData<String>? = null
     var message: MutableLiveData<String>? = null
     var usersToSend = MutableLiveData<MutableList<User>>()
-
+    var myCurrentLocation = MutableLiveData<String>()
     init{
         usersToSend.value= mutableListOf()
     }

@@ -1,19 +1,38 @@
 package com.example.alertlocation_kotlin.ui
 
+import android.Manifest
 import android.content.*
+import android.content.ClipData
+import android.content.Context.CLIPBOARD_SERVICE
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+ import com.example.alertlocation_kotlin.Constants
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
+import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.fragment_main_screen.*
+import java.util.*
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -30,7 +49,11 @@ class MainScreenFragment : Fragment() {
     private var mService: LocationUpdatesService? = null
     private var myReceiver:  MyReceiver? = null
     private var mBound = false
-
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var permissionGranted = false
+    private var myClipboard: ClipboardManager? = null
+    private var myClip: ClipData? = null
+    private lateinit var viewModel: DetailsViewModel
 
     val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -57,16 +80,101 @@ class MainScreenFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         myReceiver=MyReceiver()
+        viewModel = ViewModelProvider(requireActivity()).get(DetailsViewModel::class.java)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         floatingActionButton.setOnClickListener {
             // mService?.requestLocationUpdates()
-             val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
-             dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+            if(checkLocationPermission()){
+                val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
+                dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+            }
+
         }
 
+        copy_address.setOnClickListener {
+            find_Me()
+        }
 
+        viewModel.myCurrentLocation.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+            if(it.isNotEmpty())
+            {
+                myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
+                myClip = ClipData.newPlainText("text", it)
+                myClip?.let { _ ->
+                    myClipboard!!.setPrimaryClip(myClip!!)
+                    Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
 
     }
 
+    private fun createLocationRequest(): LocationRequest {
+        return LocationRequest.create().apply {
+            interval = Constants.UPDATE_INTERVAL_IN_MILLISECONDS
+            fastestInterval = Constants.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+    }
+
+    private fun find_Me() {
+
+        if (checkLocationPermission()) {
+
+            val builder = LocationSettingsRequest.Builder().addLocationRequest(createLocationRequest())
+            val client: SettingsClient = LocationServices.getSettingsClient(requireActivity())
+            val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+
+            task.addOnSuccessListener {
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location: Location? ->
+                        location?.let {
+                            viewModel.myCurrentLocation.postValue(getLocationTitle(LatLng(it.latitude, it.longitude)))
+                        }
+                    }
+            }
+            task.addOnFailureListener { exception ->
+                if (exception is ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed
+                    // by showing the user a dialog.
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
+                        exception.startResolutionForResult(
+                            requireActivity(),
+                            2
+                        )
+                    } catch (sendEx: IntentSender.SendIntentException) {
+                        // Ignore the error.
+                    }
+                }
+            }
+
+        }
+    }
+    fun getLocationTitle(location: LatLng):String{
+        val geocoder: Geocoder
+        val addresses: List<Address>
+        geocoder = Geocoder(requireContext(), Locale.getDefault())
+
+        addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+
+
+        val address: String? = addresses[0]?.getAddressLine(0) ?: null// If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+
+        val city: String? = addresses[0]?.locality ?: null
+        val state: String? = addresses[0]?.adminArea ?: null
+        val country: String? = addresses[0]?.countryName ?: null
+        val postalCode: String? = addresses[0]?.postalCode ?: null
+        val thoroughfare: String? = addresses[0]?.thoroughfare ?: null
+        val addressNumber: String? = addresses[0]?.featureName ?: null
+
+        return  address ?: "$thoroughfare $addressNumber $city,$postalCode,$country".replace(
+            "null",
+            ""
+        )
+
+    }
 
     private class MyReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -110,23 +218,50 @@ class MainScreenFragment : Fragment() {
         )
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MainScreenFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MainScreenFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+
+
+    private fun checkLocationPermission(): Boolean { /*
+     * Request location permission, so that we can get the location of the
+     * device. The result of the permission request is handled by a callback,
+     * onRequestPermissionsResult.
+     */
+        // TODO: check if device's gps is enabled
+        return if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            true
+        } else {
+            ActivityCompat.requestPermissions(
+                requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                Constants.MY_PERMISSIONS_REQUEST_LOCATION
+            )
+            false
+        }
+    }
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            Constants.MY_PERMISSIONS_REQUEST_LOCATION -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    find_Me()
+                } else {
+                    permissionGranted = false
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(requireContext(), "permission denied", Toast.LENGTH_LONG).show()
                 }
+                return
             }
+        }
     }
 }

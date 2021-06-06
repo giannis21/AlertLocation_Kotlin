@@ -84,7 +84,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun find_Me() {
 
-        if (checkLocationPermission()) {
+
 
             mGoogleMap.isMyLocationEnabled = true
             mGoogleMap.uiSettings.isMyLocationButtonEnabled = false
@@ -116,10 +116,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                     }
                 }
             }
-
-        }else{
-            mGoogleMap!!.isMyLocationEnabled = false
-        }
     }
 
     private fun createLocationRequest(): LocationRequest {
@@ -128,7 +124,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             fastestInterval = Constants.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
-
     }
 
     private fun navigate_to_coordinates(location: LatLng, addMarker: Boolean = false) {
@@ -186,7 +181,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         mGoogleMap.setOnMapClickListener {
             if (!add_points_flag) {
                 val title = getLocationTitle(it)
-                println("titleeeee $title")
+
                 mGoogleMap.addMarker(
                     MarkerOptions()
                         .position(it).title(title)
@@ -201,51 +196,5 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         }
 
     }
-
-    private fun checkLocationPermission(): Boolean { /*
-     * Request location permission, so that we can get the location of the
-     * device. The result of the permission request is handled by a callback,
-     * onRequestPermissionsResult.
-     */
-        // TODO: check if device's gps is enabled
-        return if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            true
-        } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_LOCATION
-            )
-            false
-        }
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    find_Me()
-                } else {
-                    permissionGranted = false
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(requireContext(), "permission denied", Toast.LENGTH_LONG).show()
-                }
-                return
-            }
-        }
-    }
-
 
 }
