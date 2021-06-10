@@ -15,7 +15,9 @@
         android:layout_height="wrap_content"
         android:padding="8dp"
         android:layout_margin="7dp"
-        android:background="@color/white"
+
+        android:background="@drawable/edittext_style"
+        android:backgroundTint="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent">
@@ -24,7 +26,7 @@
             android:id="@+id/view"
             android:layout_width="3dp"
             android:layout_height="69dp"
-            android:background="@color/colorAccent"
+            android:background="@color/teal_200"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,29 +36,76 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            android:text="@{route.routeName}"
             android:background="@color/route_textview"
+            android:drawableStart="@drawable/ic_edit"
+            android:drawablePadding="6dp"
             android:paddingStart="5dp"
             android:paddingEnd="27dp"
-            android:drawablePadding="6dp"
-            android:drawableStart="@drawable/ic_edit"
+            android:text="@{route.routeName}"
             android:textSize="23sp"
             app:layout_constraintStart_toEndOf="@+id/view"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="RtlSymmetry"
             tools:text="Korudalss" />
 
-        <TextView
-            android:id="@+id/attr"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/message_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingEnd="3dp"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="40dp"
+            android:layout_height="50dp"
             android:layout_marginTop="5dp"
-            android:text="@{route.message}"
-            app:layout_constraintStart_toEndOf="@+id/view"
-            app:layout_constraintTop_toBottomOf="@+id/name_route" />
+            android:layout_marginStart="6dp"
+            android:background="@drawable/edittext_style"
+            android:backgroundTint="@color/white_msg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="3dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/name_route"
+            app:layout_constraintTop_toBottomOf="@+id/name_route"
+            tools:layout_height="50dp">
+
+            <ImageView
+                android:id="@+id/message_icon"
+                android:layout_width="24dp"
+                android:layout_marginTop="3dp"
+                android:layout_height="23dp"
+                android:backgroundTint="@color/black"
+                android:src="@drawable/ic_message_black_24dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/messageTxt"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@null"
+                android:ellipsize="end"
+                android:ems="10"
+                android:gravity="top|left"
+                android:text="@{route.message}"
+                android:maxLines="2"
+                android:scrollbars="vertical"
+                android:typeface="normal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/message_icon"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="RtlHardcoded" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <!--    android:background="@drawable/edittext_style"-->
+
+        <ImageView
+            android:id="@+id/saved_icon"
+            android:layout_width="33dp"
+            android:alpha="0"
+            android:layout_height="33dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/ic_save"
+            app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout2"
+            app:tint="@color/teal_200" />
+
 
         <RadioButton
             android:id="@+id/item_select"
@@ -76,6 +125,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             tools:text="Receivers:"
+            android:visibility="gone"
             android:text="@{route.getReceivers()}"
             android:layout_marginStart="40dp"
             app:layout_constraintStart_toStartOf="@+id/attr"
