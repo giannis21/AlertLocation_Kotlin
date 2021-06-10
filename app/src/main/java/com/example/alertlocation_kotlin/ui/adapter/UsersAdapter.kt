@@ -63,14 +63,14 @@ class UsersAdapter(var context: Context, users: List<User>,val viewmodel : Detai
         private val name: TextView = itemView.findViewById(R.id.username)
         private val itemContainer: ConstraintLayout = itemView.findViewById(R.id.itemContainer)
         private val personselected: ImageView = itemView.findViewById(R.id.personselected)
-        fun bind(context: Context, user: User, tempListOfSelectedUsers: MutableList<User>,viewmodel:DetailsViewModel) {
-            name.text = user.username
-            resetBackground(context,user,viewmodel)
+            fun bind(context: Context, user: User, tempListOfSelectedUsers: MutableList<User>,viewmodel:DetailsViewModel) {
+                name.text = user.username
+                resetBackground(context,user,viewmodel)
 
-            itemContainer.setOnClickListener {
-                changeSelection(user, context, true,tempListOfSelectedUsers,viewmodel)
+                itemContainer.setOnClickListener {
+                    changeSelection(user, context, true,tempListOfSelectedUsers,viewmodel)
+                }
             }
-        }
 
         private fun changeSelection(user: User, context: Context, pressedItem: Boolean, tempListOfSelectedUsers: MutableList<User>,viewmodel: DetailsViewModel) {
             if ( personselected.alpha == 0.2f && !tempListOfSelectedUsers.contains(user))  {

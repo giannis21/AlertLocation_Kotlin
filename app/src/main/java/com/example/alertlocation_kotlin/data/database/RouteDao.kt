@@ -15,7 +15,7 @@ interface RouteDao {
     suspend fun insert(route: Route)
 
     @Query("SELECT * from Route")
-    fun getRoutes(): LiveData<List<Route>>
+    fun getRoutes():LiveData<MutableList<Route>>
 
 //    @Query("SELECT * FROM now_playing where page = :page AND currentFragment='nowPlaying'")
 //    suspend fun get_now_playing_per_page(page: Int): NowPlaying

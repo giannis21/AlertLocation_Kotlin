@@ -9,7 +9,7 @@ import com.example.alertlocation_kotlin.data.model.Route
 import com.example.tvshows.Converters
 import com.example.tvshows.RouteDao
 
-@Database(entities = arrayOf(Route::class), version = 1, exportSchema = false)
+@Database(entities = [Route::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 public abstract class RouteRoomDatabase : RoomDatabase() {
 

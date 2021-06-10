@@ -20,17 +20,24 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
- import com.example.alertlocation_kotlin.Constants
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.alertlocation_kotlin.Constants
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
+import com.example.alertlocation_kotlin.data.model.Route
+import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
+import com.example.tvshows.ui.nowplaying.ViewmodelFactory
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.fragment_main_screen.*
+import java.io.IOException
 import java.util.*
 
 
@@ -54,6 +61,9 @@ class MainScreenFragment : Fragment() {
     private var myClipboard: ClipboardManager? = null
     private var myClip: ClipData? = null
     private lateinit var viewModel: DetailsViewModel
+    private lateinit var viewModelFactory: ViewmodelFactory
+    private lateinit var routesAdapter: RoutesAdapter
+    private lateinit var linearLayoutManager: LinearLayoutManager
 
     val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -80,10 +90,19 @@ class MainScreenFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         myReceiver=MyReceiver()
-        viewModel = ViewModelProvider(requireActivity()).get(DetailsViewModel::class.java)
+
+        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
+        viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
+
+        routesAdapter= RoutesAdapter(mutableListOf(),requireContext())
+        routesRecyclerview.adapter=routesAdapter
+        linearLayoutManager = LinearLayoutManager(requireContext())
+        routesRecyclerview.layoutManager = linearLayoutManager
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         floatingActionButton.setOnClickListener {
-            // mService?.requestLocationUpdates()
+
             if(checkLocationPermission()){
                 val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
                 dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
@@ -95,17 +114,14 @@ class MainScreenFragment : Fragment() {
             find_Me()
         }
 
-        viewModel.myCurrentLocation.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
-            if(it.isNotEmpty())
-            {
-                myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
-                myClip = ClipData.newPlainText("text", it)
-                myClip?.let { _ ->
-                    myClipboard!!.setPrimaryClip(myClip!!)
-                    Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT).show()
-                }
-            }
+        viewModel.allRoutes.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+            if(it.isNullOrEmpty())
+                return@Observer
+
+            routesAdapter.updateData(it)
+
         })
+
 
     }
 
@@ -129,7 +145,21 @@ class MainScreenFragment : Fragment() {
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location: Location? ->
                         location?.let {
-                            viewModel.myCurrentLocation.postValue(getLocationTitle(LatLng(it.latitude, it.longitude)))
+                            viewModel.myCurrentLocation.postValue(getAddress(it.latitude, it.longitude))
+                            viewModel.myCurrentLocation.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+                                //  viewModel.myCurrentLocation.removeObserver()
+                                if(!it.isNullOrEmpty())
+                                {
+                                    myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
+                                    myClip = ClipData.newPlainText("text", it)
+                                    myClip?.let { _ ->
+                                        myClipboard!!.setPrimaryClip(myClip!!)
+                                        Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT).show()
+                                    }
+                                }else{
+                                    Toast.makeText(requireContext(), "Something went wrong, try again!", Toast.LENGTH_SHORT).show()
+                                }
+                            })
                         }
                     }
             }
@@ -152,30 +182,36 @@ class MainScreenFragment : Fragment() {
 
         }
     }
-    fun getLocationTitle(location: LatLng):String{
-        val geocoder: Geocoder
-        val addresses: List<Address>
-        geocoder = Geocoder(requireContext(), Locale.getDefault())
-
-        addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
 
 
-        val address: String? = addresses[0]?.getAddressLine(0) ?: null// If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+    private fun getAddress(lat: Double, lon: Double): String {
+        var errorMessage = ""
+        var addresses: List<Address> = emptyList()
+        val geocoder = Geocoder(activity?.applicationContext, Locale.getDefault())
+        try {
+            addresses = geocoder.getFromLocation(
+                lat,
+                lon,
 
-        val city: String? = addresses[0]?.locality ?: null
-        val state: String? = addresses[0]?.adminArea ?: null
-        val country: String? = addresses[0]?.countryName ?: null
-        val postalCode: String? = addresses[0]?.postalCode ?: null
-        val thoroughfare: String? = addresses[0]?.thoroughfare ?: null
-        val addressNumber: String? = addresses[0]?.featureName ?: null
+                1)
+        } catch (ioException: IOException) {
+            return ""
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            return ""
+        }
 
-        return  address ?: "$thoroughfare $addressNumber $city,$postalCode,$country".replace(
-            "null",
+        // Handle case where no address was found.
+        return if (addresses.isEmpty()) {
             ""
-        )
+        } else {
+            val address = addresses[0]
 
+            val addressFragments = with(address) {
+                (0..maxAddressLineIndex).map { getAddressLine(it) }
+            }
+            addressFragments.joinToString(separator = "\n")
+        }
     }
-
     private class MyReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val location = intent.getParcelableExtra<Location>(EXTRA_LOCATION)
@@ -188,7 +224,6 @@ class MainScreenFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-
 
 
         // Bind to the service. If the service is in foreground mode, this signals to the service
@@ -264,4 +299,6 @@ class MainScreenFragment : Fragment() {
             }
         }
     }
+
+
 }

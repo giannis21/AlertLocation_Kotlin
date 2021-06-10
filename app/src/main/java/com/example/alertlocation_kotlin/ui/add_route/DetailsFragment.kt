@@ -22,8 +22,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.User
+import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.adapter.UsersAdapter
+import com.example.tvshows.ui.nowplaying.ViewmodelFactory
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.database.*
@@ -38,6 +41,8 @@ class DetailsFragment : Fragment() {
         fun newInstance() = DetailsFragment()
         var clearValuesListener: (() -> Unit)?=null
     }
+    private lateinit var viewModelFactory: ViewmodelFactory
+
     val handler = Handler(Looper.getMainLooper())
     private lateinit var viewModel: DetailsViewModel
     lateinit var usersAdapter : UsersAdapter
@@ -52,7 +57,12 @@ class DetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProvider(requireActivity()).get(DetailsViewModel::class.java)
+
+        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
+        viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
+
+
         val recyclerview = view.findViewById<RecyclerView>(R.id.recyclerview)
         usersAdapter = UsersAdapter(requireContext(), mutableListOf(),viewModel)
         message_id1.afterTextChanged {

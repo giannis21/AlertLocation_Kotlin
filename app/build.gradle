@@ -5,6 +5,7 @@ plugins {
 }
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 30
@@ -74,8 +75,9 @@ dependencies {
 
     def room_version = "2.2.6"
     //noinspection GradleDependency
-    implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
+    implementation 'androidx.room:room-runtime:2.3.0'
+    implementation "androidx.room:room-ktx:2.3.0"
+    kapt "androidx.room:room-compiler:2.3.0"
     //noinspection GradleDependency
     implementation "androidx.room:room-rxjava2:$room_version"
     //noinspection GradleDependency

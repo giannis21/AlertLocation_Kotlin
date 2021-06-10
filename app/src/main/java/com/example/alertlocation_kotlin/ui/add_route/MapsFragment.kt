@@ -15,9 +15,14 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.alertlocation_kotlin.Constants
 import com.example.alertlocation_kotlin.Constants.Companion.MY_PERMISSIONS_REQUEST_LOCATION
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
+import com.example.alertlocation_kotlin.data.model.Points
+import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.tvshows.ui.nowplaying.ViewmodelFactory
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,6 +34,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.fragment_maps.*
+import java.io.IOException
 import java.util.*
 
 
@@ -38,6 +44,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var permissionGranted = false
     private lateinit var mGoogleMap: GoogleMap
+    private lateinit var viewModel: DetailsViewModel
+    private lateinit var viewModelFactory: ViewmodelFactory
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -50,12 +58,16 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         fun newInstance() = MapsFragment()
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
+        viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
 
         val anim = ObjectAnimator.ofFloat(actionsContainer, "translationX", 90f, 0f)
         anim.duration = 2000
@@ -78,6 +90,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         floatingActionButton.setOnClickListener {
             it.visibility = View.GONE
             mGoogleMap.clear()
+            viewModel.clearPoints()
         }
 
     }
@@ -127,19 +140,21 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun navigate_to_coordinates(location: LatLng, addMarker: Boolean = false) {
-        if (addMarker)
+        if (addMarker){
+
+            val title=getAddress(location.latitude,location.longitude)
             mGoogleMap.addMarker(
                 MarkerOptions()
                     .position(location)
-                    .title(getLocationTitle(location))
+                    .title(title)
                     //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
                     .icon(
                         BitmapDescriptorFactory
                             .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                     )
-
-
             )
+        }
+
 
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(location))
         mGoogleMap.animateCamera(
@@ -151,37 +166,43 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             )
         )
     }
+    private fun getAddress(lat: Double, lon: Double): String {
 
-    fun getLocationTitle(location: LatLng):String{
-        val geocoder: Geocoder
-        val addresses: List<Address>
-        geocoder = Geocoder(requireContext(), Locale.getDefault())
+        var addresses: List<Address> = emptyList()
+        val geocoder = Geocoder(activity?.applicationContext, Locale.getDefault())
+        try {
+            addresses = geocoder.getFromLocation(lat, lon, 1)
+        } catch (ioException: IOException) {
+            return ""
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            return ""
+        }
 
-        addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-
-
-        val address: String? = addresses[0]?.getAddressLine(0) ?: null// If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-
-        val city: String? = addresses[0]?.locality ?: null
-        val state: String? = addresses[0]?.adminArea ?: null
-        val country: String? = addresses[0]?.countryName ?: null
-        val postalCode: String? = addresses[0]?.postalCode ?: null
-        val thoroughfare: String? = addresses[0]?.thoroughfare ?: null
-        val addressNumber: String? = addresses[0]?.featureName ?: null
-
-        return  address ?: "$thoroughfare $addressNumber $city,$postalCode,$country".replace(
-            "null",
+        // Handle case where no address was found.
+        return if (addresses.isEmpty()) {
             ""
-        )
+        } else {
+            val address = addresses[0]
 
+            val addressFragments = with(address) {
+                (0..maxAddressLineIndex).map { getAddressLine(it) }
+            }
+            addressFragments.joinToString(separator = "\n")
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
         mGoogleMap.setOnMapClickListener {
             if (!add_points_flag) {
-                val title = getLocationTitle(it)
+                val title = getAddress(it.latitude,it.longitude)
+                if(viewModel.pointsList.value?.size == 3)
+                {
+                    Toast.makeText(requireContext(),"You cannot add more than three points!",Toast.LENGTH_SHORT).show()
+                    return@setOnMapClickListener
+                }
 
+                viewModel.addPoint(Points(it.latitude,it.longitude,title))
                 mGoogleMap.addMarker(
                     MarkerOptions()
                         .position(it).title(title)
