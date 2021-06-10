@@ -66,7 +66,7 @@ class DetailsFragment : Fragment() {
         val recyclerview = view.findViewById<RecyclerView>(R.id.recyclerview)
         usersAdapter = UsersAdapter(requireContext(), mutableListOf(),viewModel)
         message_id1.afterTextChanged {
-            viewModel.message?.postValue(it)
+            viewModel.message=it
         }
         clearValuesListener ={
             usersAdapter.tempListOfSelectedUsers.clear()
@@ -142,23 +142,6 @@ class DetailsFragment : Fragment() {
                     override fun onTransitionTrigger(p0: MotionLayout?, p1: Int, p2: Boolean, p3: Float) {}
 
                 })
-
-        message_id1.afterTextChanged { searchText ->
-            viewModel.message?.postValue(searchText)
-//            saved_icon.alpha = 0f
-//            linearLayout2.background = ContextCompat.getDrawable(requireContext(), R.drawable.edittext_style)
-//            lifecycleScope.launch(Dispatchers.Main) {
-//                handler.removeCallbacksAndMessages(null)
-//                handler.postDelayed({
-//                    if (searchText.length == message_id1.text.length) {
-//                        viewModel.message?.postValue(searchText)
-//                        animateSaveIcon()
-//                    }
-//                }, 1500)
-//
-//            }
-
-        }
 
 
         searchHereEdittext.afterTextChanged { searchText ->

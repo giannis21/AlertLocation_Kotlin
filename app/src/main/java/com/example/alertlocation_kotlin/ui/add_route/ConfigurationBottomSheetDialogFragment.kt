@@ -93,7 +93,8 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
            viewModel.addRouteToDatabase(
                Route("route ${System.currentTimeMillis()}",
                    viewModel.usersToSend.value ?: mutableListOf(),
-                   viewModel.pointsList.value ?: mutableListOf(),viewModel.message?.value ?: "Message"))
+                   viewModel.pointsList.value ?: mutableListOf(),viewModel.message))
+            dialog.dismiss()
         }
     }
     private fun initviewpager() {

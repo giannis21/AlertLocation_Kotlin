@@ -16,7 +16,7 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
 
 
     var route_name: MutableLiveData<String>? = null
-    var message: MutableLiveData<String>? = null
+    var message: String =""
     var usersToSend = MutableLiveData<MutableList<User>>()
     var myCurrentLocation = MutableLiveData<String?>(null)
     var pointsList = MutableLiveData<MutableList<Points>>()
