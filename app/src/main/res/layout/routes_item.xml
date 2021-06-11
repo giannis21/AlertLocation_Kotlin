@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <import type="android.view.View"/>
         <variable
             name="route"
             type="com.example.alertlocation_kotlin.data.model.Route" />
@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="8dp"
-        android:layout_margin="7dp"
+        android:layout_margin="12dp"
 
         android:background="@drawable/edittext_style"
         android:backgroundTint="@color/white"
@@ -33,16 +33,19 @@
 
         <TextView
             android:id="@+id/name_route"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            android:background="@color/route_textview"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/edittext_style"
+            android:backgroundTint="@color/white_msg"
             android:drawableStart="@drawable/ic_edit"
             android:drawablePadding="6dp"
             android:paddingStart="5dp"
             android:paddingEnd="27dp"
             android:text="@{route.routeName}"
             android:textSize="23sp"
+            app:layout_constraintEnd_toStartOf="@+id/switch1"
             app:layout_constraintStart_toEndOf="@+id/view"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="RtlSymmetry"
@@ -50,16 +53,17 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/message_container"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginStart="6dp"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="6dp"
             android:background="@drawable/edittext_style"
             android:backgroundTint="@color/white_msg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="3dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/expand_icon"
             app:layout_constraintStart_toStartOf="@+id/name_route"
             app:layout_constraintTop_toBottomOf="@+id/name_route"
             tools:layout_height="50dp">
@@ -67,8 +71,8 @@
             <ImageView
                 android:id="@+id/message_icon"
                 android:layout_width="24dp"
-                android:layout_marginTop="3dp"
                 android:layout_height="23dp"
+                android:layout_marginTop="3dp"
                 android:backgroundTint="@color/black"
                 android:src="@drawable/ic_message_black_24dp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -78,13 +82,14 @@
                 android:id="@+id/messageTxt"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:layout_marginStart="5dp"
                 android:background="@null"
                 android:ellipsize="end"
                 android:ems="10"
                 android:gravity="top|left"
-                android:text="@{route.message}"
                 android:maxLines="2"
                 android:scrollbars="vertical"
+                android:text="@{route.message}"
                 android:typeface="normal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -118,19 +123,63 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/reiceiverstextView"
-            android:paddingEnd="3dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            tools:text="Receivers:"
-            android:visibility="gone"
-            android:text="@{route.getReceivers()}"
-            android:layout_marginStart="40dp"
-            app:layout_constraintStart_toStartOf="@+id/attr"
-            app:layout_constraintTop_toBottomOf="@+id/attr" />
 
+
+        <ImageView
+            android:id="@+id/expand_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:changeIcon="@{route.expanded}"
+            android:src="@drawable/ic_baseline_add_24"
+            app:layout_constraintBottom_toBottomOf="@+id/message_container"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/message_container" />
+
+        <Switch
+            android:id="@+id/switch1"
+            android:trackTint="@drawable/toggle_style"
+            android:trackTintMode="src_over"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/viewSeparator"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="6dp"
+            android:background="@color/back"
+            app:layout_constraintTop_toBottomOf="@+id/message_container"
+            tools:layout_editor_absoluteX="8dp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/expandedContainer"
+            android:layout_width="363dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/message_container"
+            app:layout_constraintTop_toBottomOf="@+id/viewSeparator">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_users"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:foregroundGravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:layout_height="30dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/expandedViewGroup"
+            android:layout_width="wrap_content"
+            android:visibility="@{route.expanded ? View.VISIBLE : View.GONE}"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="expandedContainer,viewSeparator" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

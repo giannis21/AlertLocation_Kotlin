@@ -91,7 +91,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         saveIcon.setOnClickListener {
            viewModel.addRouteToDatabase(
-               Route("route ${System.currentTimeMillis()}",
+               Route(0,"route ${System.currentTimeMillis()}",
                    viewModel.usersToSend.value ?: mutableListOf(),
                    viewModel.pointsList.value ?: mutableListOf(),viewModel.message))
             dialog.dismiss()

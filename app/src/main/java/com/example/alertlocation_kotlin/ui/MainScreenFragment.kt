@@ -13,12 +13,14 @@ import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.alertlocation_kotlin.Constants
@@ -36,7 +38,11 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_main_screen.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
@@ -95,7 +101,7 @@ class MainScreenFragment : Fragment() {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
         viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
 
-        routesAdapter= RoutesAdapter(mutableListOf(),requireContext())
+        routesAdapter= RoutesAdapter(mutableListOf(),requireContext(),viewModel)
         routesRecyclerview.adapter=routesAdapter
         linearLayoutManager = LinearLayoutManager(requireContext())
         routesRecyclerview.layoutManager = linearLayoutManager
@@ -114,12 +120,32 @@ class MainScreenFragment : Fragment() {
             find_Me()
         }
 
+        routesAdapter.editNameListener ={
+            showDialog()
+        }
         viewModel.allRoutes.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
             if(it.isNullOrEmpty())
                 return@Observer
 
             routesAdapter.updateData(it)
 
+        })
+
+
+
+        viewModel.myCurrentLocation.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
+            //  viewModel.myCurrentLocation.removeObserver()
+            if(!it.isNullOrEmpty())
+            {
+                myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
+                myClip = ClipData.newPlainText("text", it)
+                myClip?.let { _ ->
+                    myClipboard!!.setPrimaryClip(myClip!!)
+                    Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT).show()
+                }
+            }else{
+                Toast.makeText(requireContext(), "Something went wrong, try again!", Toast.LENGTH_SHORT).show()
+            }
         })
 
 
@@ -146,20 +172,6 @@ class MainScreenFragment : Fragment() {
                     .addOnSuccessListener { location: Location? ->
                         location?.let {
                             viewModel.myCurrentLocation.postValue(getAddress(it.latitude, it.longitude))
-                            viewModel.myCurrentLocation.observe(viewLifecycleOwner, androidx.lifecycle.Observer {
-                                //  viewModel.myCurrentLocation.removeObserver()
-                                if(!it.isNullOrEmpty())
-                                {
-                                    myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
-                                    myClip = ClipData.newPlainText("text", it)
-                                    myClip?.let { _ ->
-                                        myClipboard!!.setPrimaryClip(myClip!!)
-                                        Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT).show()
-                                    }
-                                }else{
-                                    Toast.makeText(requireContext(), "Something went wrong, try again!", Toast.LENGTH_SHORT).show()
-                                }
-                            })
                         }
                     }
             }
@@ -252,6 +264,18 @@ class MainScreenFragment : Fragment() {
             IntentFilter(ACTION_BROADCAST)
         )
     }
+    fun showDialog(){
+        val dialog = BottomSheetDialog(requireContext())
+        val inflater = context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val view = inflater.inflate(R.layout.layout_bottom_sheet, null)
+        dialog.setContentView(view)
+        dialog.findViewById<TextView>(R.id.okayBtn)?.setOnClickListener {
+
+
+        }
+
+        dialog.show()
+    }
 
 
 
@@ -300,5 +324,9 @@ class MainScreenFragment : Fragment() {
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.myCurrentLocation.postValue(null)
+    }
 
 }

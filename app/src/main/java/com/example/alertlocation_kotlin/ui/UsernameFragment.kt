@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.model.User
@@ -18,6 +19,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.android.synthetic.main.fragment_username.*
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -53,7 +57,11 @@ class UsernameFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         FirebaseService.sharedPref = context?.getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
-
+        val namesFlow = listOf("Jody", "Steve", "Lance", "Joe").asFlow()
+        lifecycleScope.launchWhenCreated {
+            namesFlow.map { name  -> name.length }
+                .filter {   length  -> length <4 }
+        }
         FirebaseInstallations.getInstance().getToken(true)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

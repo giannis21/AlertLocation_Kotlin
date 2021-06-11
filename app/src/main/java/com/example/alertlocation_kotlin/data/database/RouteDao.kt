@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.alertlocation_kotlin.data.model.Route
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -15,7 +16,7 @@ interface RouteDao {
     suspend fun insert(route: Route)
 
     @Query("SELECT * from Route")
-    fun getRoutes():LiveData<MutableList<Route>>
+    fun getRoutes(): Flow<MutableList<Route>>
 
 //    @Query("SELECT * FROM now_playing where page = :page AND currentFragment='nowPlaying'")
 //    suspend fun get_now_playing_per_page(page: Int): NowPlaying

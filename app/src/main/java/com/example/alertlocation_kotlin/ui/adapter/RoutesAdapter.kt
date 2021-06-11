@@ -4,23 +4,82 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.viewModelScope
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.BR
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.model.Route
+import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.databinding.RoutesItemBinding
+import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
+import com.google.android.material.chip.Chip
+import kotlinx.android.synthetic.main.details_fragment.*
+import kotlinx.android.synthetic.main.routes_item.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class RoutesAdapter(private val dataSet: MutableList<Route>,context: Context) : RecyclerView.Adapter<RoutesAdapter.ViewHolder>() {
+class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context,var viewModel: DetailsViewModel) : RecyclerView.Adapter<RoutesAdapter.ViewHolder>() {
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder).
      */
-    class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(route: Route) {
+  var editNameListener : ((Long) -> Unit)?=null
+  inner  class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(route: Route,context: Context) {
             binding.setVariable(BR.route,route)
+
+            binding.root.expand_icon.setOnClickListener {
+
+                val isExpanded = route.isExpanded
+                route.isExpanded = !isExpanded
+                notifyItemChanged(adapterPosition)
+
+                if (route.isExpanded) {
+                    dataSet.forEach { each_route ->
+                        if (each_route != route && each_route.isExpanded) {
+                            each_route.isExpanded = false
+                            notifyItemChanged(dataSet.indexOf(each_route))
+                        }
+                    }
+                }
+            }
+
+            viewModel.viewModelScope.launch(Dispatchers.Main) {
+                binding.root.chip_group_users.removeAllViews()
+
+                route.users.forEach { user ->
+                    val chip = Chip(context)
+                    chip.text = user.username
+                    chip.tag = user.token
+                    chip.textSize=17f
+                    //chip.chipIcon = ContextCompat.getDrawable(context,R.drawable.ic_save)
+
+                    chip.setChipBackgroundColorResource(R.color.teal_200)
+                    chip.setTextColor(ContextCompat.getColor(context, R.color.white))
+
+                    chip.setOnCloseIconClickListener {
+                        binding.root.chip_group_users.removeView(it)
+                        val name= (it as Chip).text.toString()
+                        val token= (it as Chip).tag.toString()
+                        viewModel.removeUser(User(name, token))
+                    }
+                    binding.root.chip_group_users.addView(chip)
+                }
+
+                binding.root.name_route.setOnClickListener {
+                    editNameListener?.invoke(route.id)
+                }
+            }
+
+
+
+
+
         }
     }
 
@@ -31,9 +90,9 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,context: Context) : 
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-
-        dataSet[position].let {
-            viewHolder.bind(it)
+        var route= dataSet[position]
+        route.let {
+            viewHolder.bind(it,context = context)
         }
 
     }
@@ -41,9 +100,29 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,context: Context) : 
     override fun getItemCount() = dataSet.size
 
     fun updateData(routes: MutableList<Route>) {
-        dataSet.clear()
-        dataSet.addAll(routes)
-        notifyDataSetChanged()
-    }
+        val diffCallback = RoutesDiffCallback(this.dataSet, routes)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
 
+        this.dataSet.clear()
+        this.dataSet.addAll(routes)
+        diffResult.dispatchUpdatesTo(this)
+    }
+    class RoutesDiffCallback(
+        private val oldList: List<Route>,
+        private val newList: List<Route>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldList.size
+
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition] == newList[newItemPosition]
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].RouteName == newList[newItemPosition].RouteName
+        }
+
+    }
 }

@@ -1,10 +1,7 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.alertlocation_kotlin.data.model.Points
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.model.User
@@ -22,7 +19,7 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
     var pointsList = MutableLiveData<MutableList<Points>>()
     var allRoutes: LiveData<MutableList<Route>>
     init{
-        allRoutes = mainRepository.getAll()
+        allRoutes = mainRepository.getAll().asLiveData()
         usersToSend.value= mutableListOf()
         pointsList.value= mutableListOf()
     }
