@@ -21,7 +21,7 @@ interface NotificationApi {
     @POST("/fcm/send")
     suspend fun postNotification(@Body notification: PushNotification):Response<ResponseBody>
 
-    @Headers("Authorization: key=${Constants.SERVER_KEY}","Content-Type:${Constants.CONTENT_TYPE}","project_id:686403281935")
+    @Headers("Authorization: key=${Constants.SERVER_KEY}","Content-Type:${Constants.CONTENT_TYPE}","project_id:939355020609")
     @POST("fcm/notification")
     suspend fun createGroupNotification(@Body notificationGroup: Group):Response<NotificationGroupResponse>
 

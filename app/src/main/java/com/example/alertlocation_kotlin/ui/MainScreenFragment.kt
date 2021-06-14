@@ -317,9 +317,13 @@ class MainScreenFragment : Fragment() {
                     location_set_byUser.longitude = point.longitude.toDouble()
                     val distanceInMeters: Float = current_location.distanceTo(location_set_byUser)
                     if (distanceInMeters < 50) {
-                        // post firebase for notification
-                        println("eimai konta ")
-                        stopService()
+                        mRoute?.let {
+                            viewModel.sendPushNotification(it)
+                            LocalBroadcastManager.getInstance(context).unregisterReceiver(myReceiver!!)
+                            stopService()
+                            
+                        }
+
                     }
                 }
 
