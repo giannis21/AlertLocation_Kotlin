@@ -1,6 +1,7 @@
 package com.example.alertlocation_kotlin.ui
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
@@ -8,12 +9,14 @@ import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -31,11 +34,9 @@ import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_CHANNEL
 import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_ID
 import com.example.alertlocation_kotlin.MainActivity
 import com.example.alertlocation_kotlin.R
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
+import com.example.alertlocationkotlin.CHANNEL_ID
+import com.google.android.gms.location.*
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
 
 typealias Polyline = MutableList<LatLng>
@@ -46,7 +47,7 @@ class TrackingService : LifecycleService() {
     var isFirstRun = true
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
+    private var mLocationCallback: LocationCallback? = null
     companion object {
         val isTracking = MutableLiveData<Boolean>()
         val pathPoints = MutableLiveData<Polylines>()
@@ -60,14 +61,40 @@ class TrackingService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         postInitialValues()
-        fusedLocationProviderClient = FusedLocationProviderClient(this)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         isTracking.observe(this, Observer {
             updateLocationTracking(it)
         })
+
+        mLocationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                super.onLocationResult(locationResult)
+                val intent = Intent(Constants.ACTION_BROADCAST)
+                intent.putExtra(Constants.EXTRA_LOCATION, locationResult?.lastLocation)
+                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        val startedFromNotification = intent!!.getBooleanExtra(
+            Constants.EXTRA_STARTED_FROM_NOTIFICATION,
+            false
+        )
+
+        // We got here because the user decided to remove location updates from the notification.
+
+        // We got here because the user decided to remove location updates from the notification.
+        if (startedFromNotification) {
+            val intent = Intent(Constants.ACTION_BROADCAST)
+            intent.putExtra(Constants.EXTRA_LOC_STOPED, "service stoped")
+            LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+            stopSelf()
+        }
+
         intent?.let {
             when (it.action) {
                 ACTION_START_OR_RESUME_SERVICE -> {
@@ -97,12 +124,12 @@ class TrackingService : LifecycleService() {
                 val request =createLocationRequest()
                 fusedLocationProviderClient.requestLocationUpdates(
                     request,
-                    locationCallback,
+                    mLocationCallback!!,
                     Looper.getMainLooper()
                 )
 
         } else {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+            fusedLocationProviderClient.removeLocationUpdates(mLocationCallback!!)
         }
     }
     private fun createLocationRequest(): LocationRequest {
@@ -115,15 +142,7 @@ class TrackingService : LifecycleService() {
     }
 
 
-    val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            super.onLocationResult(locationResult)
-            val intent = Intent(Constants.ACTION_BROADCAST)
-            intent.putExtra(Constants.EXTRA_LOCATION, locationResult?.lastLocation)
-            LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
-            println("locationnn ${locationResult?.lastLocation?.latitude}")
-        }
-    }
+
 
 
 
@@ -131,24 +150,27 @@ class TrackingService : LifecycleService() {
     private fun startForegroundService() {
 
         isTracking.postValue(true)
+        startForeground()
+    }
 
 
-        val servicePendingIntent = PendingIntent.getService(
-            this, 0, Intent(),
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val text: CharSequence = "Utils.getLocationText(mLocation)"
-        val title: CharSequence = Utils.getLocationTitle(this)
-        // The PendingIntent to launch activity.
-        val activityPendingIntent = PendingIntent.getActivity(
-            this, 0, Intent(
-                this,
-                MainActivity::class.java
-            ), 0
-        )
+    private fun startForeground() {
+        val channelId =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel(CHANNEL_ID, "channelName")
+            } else {
+                ""
+            }
 
+        val intent = Intent(this, TrackingService::class.java)
+        intent.putExtra(Constants.EXTRA_STARTED_FROM_NOTIFICATION, true)
 
-        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        // The PendingIntent that leads to a call to onStartCommand() in this service.
+        val servicePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val activityPendingIntent = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0)
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId )
             .addAction(
                 R.drawable.common_google_signin_btn_icon_dark, "Launch app",
                 activityPendingIntent
@@ -157,33 +179,48 @@ class TrackingService : LifecycleService() {
                 R.drawable.common_google_signin_btn_icon_dark, "Stop service",
                 servicePendingIntent
             )
-            .setAutoCancel(false)
+            .setContentText("Service started")
+          //  .setContentTitle("titlos")
             .setOngoing(true)
-            .setSmallIcon(R.drawable.ic_baseline_add_24)
-            .setContentTitle("Running App")
-            .setContentText("00:00:00")
-            .setContentIntent(getMainActivityPendingIntent())
+        val millis=System.currentTimeMillis()
+        val notification = notificationBuilder.setOngoing(true)
 
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
+        startForeground(millis.toInt(), notification)
     }
 
-    private fun getMainActivityPendingIntent() = PendingIntent.getActivity(
-        this,
-        0,
-        Intent(this, MainActivity::class.java).also {
-            it.action = ACTION_SHOW_TRACKING_FRAGMENT
-        },
-        FLAG_UPDATE_CURRENT
-    )
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(channelId: String, channelName: String): String{
+        val chan = NotificationChannel(channelId,
+            channelName, NotificationManager.IMPORTANCE_NONE)
+        chan.lightColor = Color.BLUE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
+    }
+
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(notificationManager: NotificationManager) {
+    private fun createNotificationChannel() {
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
             NOTIFICATION_CHANNEL_NAME,
             IMPORTANCE_LOW
         )
-        notificationManager.createNotificationChannel(channel)
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(channel)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        fusedLocationProviderClient!!.removeLocationUpdates(mLocationCallback!!)
     }
 }
 

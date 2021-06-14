@@ -29,6 +29,7 @@ import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
+import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOC_STOPED
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
@@ -59,6 +60,7 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class MainScreenFragment : Fragment() {
+
     private var mRoute: Route?=null
     private var mService: LocationUpdatesService? = null
     private var myReceiver:  MyReceiver? = null
@@ -72,6 +74,7 @@ class MainScreenFragment : Fragment() {
     private lateinit var routesAdapter: RoutesAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
     private var viewExpanded=false
+
     val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             val binder: LocationUpdatesService.LocalBinder = service as LocationUpdatesService.LocalBinder
@@ -309,6 +312,11 @@ class MainScreenFragment : Fragment() {
 
         override fun onReceive(context: Context, intent: Intent) {
             val current_location = intent.getParcelableExtra<Location>(EXTRA_LOCATION)
+            val serviceStoped = intent.getStringExtra(EXTRA_LOC_STOPED)
+
+            serviceStoped?.let {
+                //edo tha ginei update i basi
+            }
 
             if (current_location != null && mRoute != null) {
                 mRoute!!.points.forEachIndexed { index, point ->
@@ -316,10 +324,13 @@ class MainScreenFragment : Fragment() {
                     location_set_byUser.latitude = point.latitude.toDouble()
                     location_set_byUser.longitude = point.longitude.toDouble()
                     val distanceInMeters: Float = current_location.distanceTo(location_set_byUser)
+
                     if (distanceInMeters < 50) {
-                        // post firebase for notification
-                        println("eimai konta ")
-                        stopService()
+                        mRoute?.let {
+                            viewModel.sendPushNotification(it)
+                            routesAdapter.resetSwitch(mRoute!!)
+                            stopService()
+                        }
                     }
                 }
 

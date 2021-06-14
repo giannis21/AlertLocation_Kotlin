@@ -83,12 +83,8 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
 
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
-
-              //  var a =PushNotification(NotificationData("titlos","minima"),
-                   // "fx2ZgAsCTPi3Bumnmu3hTa:APA91bHdUET-iFAF2c2A0aTNKwIDte3pCnPKSh6PEVd83pYI5sufej3Y6hX4Zla8wVX8djxHWfEDty1HGR094nVWjsKjIQndlGutDjhGtS3keH30a4UGs9dh2FsScPjNyuZmaAfbRqFo")
-             //   remoteRepository.postNotification(a)
-                remoteRepository.createDataGroupNotification(  Group(
-                    "create", "ae4", users.map { it -> it.token }.toMutableList()
+                remoteRepository.createGroupNotification(  Group(
+                    "create", System.currentTimeMillis().toString(), users.map { it -> it.token }.toMutableList()
                 ))
             }.onFailure {
 
@@ -101,6 +97,22 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
 
         }
 
+    }
+
+    fun sendPushNotification(route: Route) {
+        viewModelScope.launch(Dispatchers.Default) {
+            kotlin.runCatching {
+                remoteRepository.postNotification(
+                    PushNotification(NotificationData(route.message,route.RouteName),
+                        route.notificationGroupId)
+                )
+            }.onFailure {
+
+            }.onSuccess { response ->
+
+            }//https://firebase.google.com/docs/cloud-messaging/android/device-group?utm_source=studio
+
+        }
     }
 
 

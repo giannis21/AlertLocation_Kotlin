@@ -120,6 +120,14 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
         this.dataSet.addAll(routes)
         diffResult.dispatchUpdatesTo(this)
     }
+
+    fun resetSwitch(mRoute: Route) {
+
+         val route=dataSet[dataSet.indexOf(mRoute)]
+         route.isEnabled=false
+         notifyItemChanged(dataSet.indexOf(mRoute))
+    }
+
     class RoutesDiffCallback(
         private val oldList: List<Route>,
         private val newList: List<Route>

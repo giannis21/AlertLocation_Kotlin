@@ -16,6 +16,7 @@ class Constants {
         val ACTION_BROADCAST = "$PACKAGE_NAME.broadcast"
 
         val EXTRA_LOCATION = "$PACKAGE_NAME.location"
+        val EXTRA_LOC_STOPED = "$PACKAGE_NAME.stop_service"
         val EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME +
                 ".started_from_notification"
         val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 1500

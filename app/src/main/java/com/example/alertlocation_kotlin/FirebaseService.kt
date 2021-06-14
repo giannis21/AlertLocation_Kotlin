@@ -21,7 +21,7 @@ import org.json.JSONObject
 import kotlin.random.Random
 
 
-private const val CHANNEL_ID = "my_channel"
+const val CHANNEL_ID = "my_channel"
 
 class FirebaseService : FirebaseMessagingService() {
 
