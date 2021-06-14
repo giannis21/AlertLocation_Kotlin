@@ -74,15 +74,12 @@ class UsernameFragment : Fragment() {
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
         FirebaseService.sharedPref = context?.getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
-        if(FirebaseService.token.toString().isNotEmpty()){
-            findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
-            return
-        }
+
 
         uniqueUsername.editText?.doAfterTextChanged {
             errorMsg.visibility=View.GONE
         }
-        FirebaseInstallations.getInstance().getToken(true)
+        FirebaseInstallations.getInstance().getToken(false)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.d("Installations", "Installation auth token: " + task.result?.token)
@@ -91,7 +88,10 @@ class UsernameFragment : Fragment() {
                     Log.e("Installations", "Unable to get Installation auth token")
                 }
             }
-
+        if(FirebaseService.token.toString().isNotEmpty()){
+            findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
+            return
+        }
         btnSend.setOnClickListener {
             val database = FirebaseDatabase.getInstance()
             val myRef = database.getReference("Users")
