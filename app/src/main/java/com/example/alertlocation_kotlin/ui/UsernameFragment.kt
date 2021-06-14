@@ -8,15 +8,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.RemoteRepository
+import com.example.alertlocation_kotlin.ViewmodelFactory
+import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.User
+import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 import com.example.alertlocationkotlin.FirebaseService
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.example.alertlocationkotlin.NotificationApi
+
+import com.google.firebase.database.*
 import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.android.synthetic.main.fragment_username.*
 import kotlinx.coroutines.flow.asFlow
@@ -37,6 +44,9 @@ class UsernameFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private lateinit var viewModel: DetailsViewModel
+    private lateinit var viewModelFactory: ViewmodelFactory
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,11 +66,21 @@ class UsernameFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val webService = NotificationApi(networkConnectionIncterceptor!!)
+        var remoteRepository = RemoteRepository(webService)
+        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
+        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
+
         FirebaseService.sharedPref = context?.getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
-        val namesFlow = listOf("Jody", "Steve", "Lance", "Joe").asFlow()
-        lifecycleScope.launchWhenCreated {
-            namesFlow.map { name  -> name.length }
-                .filter {   length  -> length <4 }
+        if(FirebaseService.token.toString().isNotEmpty()){
+            findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
+            return
+        }
+
+        uniqueUsername.editText?.doAfterTextChanged {
+            errorMsg.visibility=View.GONE
         }
         FirebaseInstallations.getInstance().getToken(true)
             .addOnCompleteListener { task ->
@@ -73,11 +93,30 @@ class UsernameFragment : Fragment() {
             }
 
         btnSend.setOnClickListener {
-
             val database = FirebaseDatabase.getInstance()
-           val myRef = database.getReference("Users")
-//
-//            myRef.child(uniqueUsername.text.toString()).setValue(User(uniqueUsername.text.toString(),FirebaseService.token.toString()))
+            val myRef = database.getReference("Users")
+            val firebaseSearchQuery: Query = myRef.child(uniqueUsername.editText?.text.toString())
+
+            firebaseSearchQuery.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if(!dataSnapshot.exists()) {
+                        myRef.child(uniqueUsername.editText?.text.toString()).setValue(User(uniqueUsername.editText?.text.toString(),FirebaseService.token.toString()))
+                        findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
+                    }else
+                        errorMsg.visibility=View.VISIBLE
+
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    throw databaseError.toException()
+                }
+            })
+        }
+    }
+
+
+}
+/*
             myRef.child("kostas2").setValue(User("kostas2","token1"))
             myRef.child("maria4").setValue(User("maria4","token1"))
             myRef.child("gianni23s").setValue(User("gianni23s","token1"))
@@ -88,24 +127,6 @@ class UsernameFragment : Fragment() {
             myRef.child("baggel43is").setValue(User("baggel43is","token1"))
             myRef.child("xristin43a").setValue(User("xristin43a","token1"))
 
-            findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
-
-            myRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    for (snapshot in dataSnapshot.children) {
-                        if (dataSnapshot.exists()) {
-
-                       //     Toast.makeText(context,"${snapshot.childrenCount}", Toast.LENGTH_SHORT).show() //mesa sto firebase na auksanete o ari8mos twn antikemenon repoerts ena ena
-                        }
-                    }
-                }
-
-                override fun onCancelled(databaseError: DatabaseError) {}
-            })
-            // sendNotificationWhenAppClosed()
-        }
-    }
-
-}
+ */
 
 

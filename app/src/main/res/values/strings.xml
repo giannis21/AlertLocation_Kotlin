@@ -16,4 +16,6 @@
     <string name="remove_location_updates">Remove location updates</string>
 
     <string name="location_updated">Location Updated: %1$s</string>
+    <string name="this_unique_id_exists_try_another_one">This unique id exists, try another one!</string>
+    <string name="type_a_unique_id">Type a unique id..</string>
 </resources>

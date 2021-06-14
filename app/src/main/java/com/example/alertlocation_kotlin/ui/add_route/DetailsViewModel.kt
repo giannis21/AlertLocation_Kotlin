@@ -2,14 +2,19 @@ package com.example.alertlocation_kotlin.ui.add_route
 
 import android.content.Context
 import androidx.lifecycle.*
+import com.example.alertlocation_kotlin.RemoteRepository
 import com.example.alertlocation_kotlin.data.model.Points
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.alertlocationkotlin.Group
+import com.example.alertlocationkotlin.NotificationGroupResponse
+import com.example.alertlocationkotlin.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class DetailsViewModel(var mainRepository: mainRepository,context: Context) : ViewModel() {
+class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository: RemoteRepository, context: Context) : ViewModel() {
 
 
     var route_name: MutableLiveData<String>? = null
@@ -19,6 +24,7 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
     var pointsList = MutableLiveData<MutableList<Points>>()
     var allRoutes: LiveData<MutableList<Route>>
     var switchEnabled: Boolean=false
+    var groupNotificationKey=MutableLiveData<String?>(null)
     init{
         allRoutes = mainRepository.getAll().asLiveData()
         usersToSend.value= mutableListOf()
@@ -73,6 +79,26 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
             }
 
         }
+    }
+
+    fun getGroupId(users: MutableList<User>) {
+
+        viewModelScope.launch(Dispatchers.Default) {
+            kotlin.runCatching {
+                remoteRepository.createGroupNotification(  Group(
+                    "create", "ae4", users.map { it -> it.token }.toMutableList()
+                ))
+            }.onFailure {
+
+            }.onSuccess { response ->
+
+                val notificationGroupResponse: NotificationGroupResponse? = response.body()
+                groupNotificationKey.postValue(notificationGroupResponse?.notification_key)
+
+            }//https://firebase.google.com/docs/cloud-messaging/android/device-group?utm_source=studio
+
+        }
+
     }
 
 

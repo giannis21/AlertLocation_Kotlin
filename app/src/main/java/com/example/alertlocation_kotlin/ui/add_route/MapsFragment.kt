@@ -1,9 +1,7 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
-import android.Manifest
 import android.animation.ObjectAnimator
 import android.content.IntentSender
-import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -12,17 +10,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.alertlocation_kotlin.Constants
-import com.example.alertlocation_kotlin.Constants.Companion.MY_PERMISSIONS_REQUEST_LOCATION
+import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Points
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
-import com.example.tvshows.ui.nowplaying.ViewmodelFactory
+import com.example.alertlocationkotlin.NotificationApi
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -65,9 +60,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         mapFragment?.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val webService = NotificationApi(networkConnectionIncterceptor!!)
+        var remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
-        viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
+        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
         val anim = ObjectAnimator.ofFloat(actionsContainer, "translationX", 90f, 0f)
         anim.duration = 2000

@@ -35,6 +35,14 @@ class FirebaseService : FirebaseMessagingService() {
         set(value) {
             sharedPref?.edit()?.putString("token", value)?.apply()
         }
+
+        var uniqueId: String?
+        get() {
+            return sharedPref?.getString("uniqueId", "")
+        }
+        set(value) {
+            sharedPref?.edit()?.putString("uniqueId", value)?.apply()
+        }
     }
 
     override fun onNewToken(p0: String) {

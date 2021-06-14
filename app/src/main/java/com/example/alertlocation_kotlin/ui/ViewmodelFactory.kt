@@ -1,4 +1,4 @@
-package com.example.tvshows.ui.nowplaying
+package com.example.alertlocation_kotlin
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -7,12 +7,13 @@ import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 
 
+
 @Suppress("UNCHECKED_CAST")
-class ViewmodelFactory(private val remoteRepository: mainRepository, var context: Context) : ViewModelProvider.Factory{
+class ViewmodelFactory(private val mainRepository: mainRepository,var remoteRepository: RemoteRepository, var context: Context) : ViewModelProvider.Factory{
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         return when {
-            modelClass.isAssignableFrom(DetailsViewModel::class.java) -> DetailsViewModel(remoteRepository,context) as T
+            modelClass.isAssignableFrom(DetailsViewModel::class.java) -> DetailsViewModel(mainRepository,remoteRepository,context) as T
 
 //            modelClass.isAssignableFrom(FavoritesViewModel::class.java) -> FavoritesViewModel(remoteRepository, context) as T
 //            modelClass.isAssignableFrom(SearchViewModel::class.java) -> SearchViewModel(remoteRepository, context) as T

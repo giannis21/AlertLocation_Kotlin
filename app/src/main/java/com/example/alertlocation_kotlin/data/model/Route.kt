@@ -13,8 +13,8 @@ public data class Route(
     var RouteName: String,
     var users: MutableList<User>,
     var points: MutableList<Points>,
-    var message: String
-
+    var message: String,
+    var notificationGroupId: String
 ) {
     @Ignore
     var isExpanded:Boolean=false

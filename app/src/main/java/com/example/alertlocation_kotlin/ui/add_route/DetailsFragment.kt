@@ -21,12 +21,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.RemoteRepository
+import com.example.alertlocation_kotlin.ViewmodelFactory
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.adapter.UsersAdapter
-import com.example.tvshows.ui.nowplaying.ViewmodelFactory
+import com.example.alertlocationkotlin.NotificationApi
+
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.database.*
@@ -58,9 +62,12 @@ class DetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val webService = NotificationApi(networkConnectionIncterceptor!!)
+        var remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
-        viewModel = ViewModelProvider(requireActivity(),viewModelFactory).get(DetailsViewModel::class.java)
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
+        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
 
         val recyclerview = view.findViewById<RecyclerView>(R.id.recyclerview)

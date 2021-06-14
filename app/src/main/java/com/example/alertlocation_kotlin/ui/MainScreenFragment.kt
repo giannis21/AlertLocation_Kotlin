@@ -24,8 +24,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.alertlocation_kotlin.*
 
-import com.example.alertlocation_kotlin.Constants
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
@@ -36,7 +36,8 @@ import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
-import com.example.tvshows.ui.nowplaying.ViewmodelFactory
+import com.example.alertlocationkotlin.NotificationApi
+
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
@@ -96,9 +97,11 @@ class MainScreenFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         myReceiver=MyReceiver()
-
+        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val webService = NotificationApi(networkConnectionIncterceptor!!)
+        val remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
         routesAdapter= RoutesAdapter(mutableListOf(), requireContext(), viewModel)

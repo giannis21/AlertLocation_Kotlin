@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.preference.PreferenceManager
+import androidx.core.content.edit
 import com.example.alertlocation_kotlin.R
 import java.text.DateFormat
 import java.util.*
@@ -39,4 +40,6 @@ object Utils {
             R.string.location_updated,
             DateFormat.getDateTimeInstance().format( Date()));
     }
+
+
 }

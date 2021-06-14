@@ -14,15 +14,19 @@ import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.RemoteRepository
+import com.example.alertlocation_kotlin.ViewmodelFactory
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
-import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
-import com.example.tvshows.ui.nowplaying.ViewmodelFactory
+import com.example.alertlocationkotlin.NotificationApi
+
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -77,10 +81,11 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         requireActivity().window.navigationBarColor = ContextCompat.getColor(requireContext(), R.color.white)
 
-
+        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val webService = NotificationApi(networkConnectionIncterceptor!!)
+        var remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), requireContext())
-
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
         viewModel.pointsList.value?.clear()
         initviewpager()
@@ -90,12 +95,19 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
 
         saveIcon.setOnClickListener {
-           viewModel.addRouteToDatabase(
-               Route(0,"route ${System.currentTimeMillis()}",
-                   viewModel.usersToSend.value ?: mutableListOf(),
-                   viewModel.pointsList.value ?: mutableListOf(),viewModel.message))
-            dialog.dismiss()
+           viewModel.getGroupId(viewModel.usersToSend.value ?: mutableListOf())
+
         }
+        viewModel.groupNotificationKey.observe(viewLifecycleOwner, Observer {
+            it?.let {
+                viewModel.addRouteToDatabase(
+                    Route(0,"route ${System.currentTimeMillis()}",
+                        viewModel.usersToSend.value ?: mutableListOf(),
+                        viewModel.pointsList.value ?: mutableListOf(),viewModel.message,it))
+            }
+
+            dialog.dismiss()
+        })
     }
     private fun initviewpager() {
 
