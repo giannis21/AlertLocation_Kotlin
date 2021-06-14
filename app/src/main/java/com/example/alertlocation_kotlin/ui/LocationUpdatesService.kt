@@ -151,10 +151,6 @@ class LocationUpdatesService: Service() {
         // Called when a client (MainActivity in case of this sample) comes to the foreground
         // and binds with this service. The service should cease to be a foreground service
         // when that happens.
-
-        // Called when a client (MainActivity in case of this sample) comes to the foreground
-        // and binds with this service. The service should cease to be a foreground service
-        // when that happens.
         Log.i(TAG, "in onBind()")
         stopForeground(true)
         mChangingConfiguration = false
@@ -173,9 +169,6 @@ class LocationUpdatesService: Service() {
         // and binds once again with this service. The service should cease to be a foreground
         // service when that happens.
 
-        // Called when a client (MainActivity in case of this sample) returns to the foreground
-        // and binds once again with this service. The service should cease to be a foreground
-        // service when that happens.
         Log.i(TAG, "in onRebind()")
         stopForeground(true)
         mChangingConfiguration = false
@@ -196,9 +189,6 @@ class LocationUpdatesService: Service() {
         // service. If this method is called due to a configuration change in MainActivity, we
         // do nothing. Otherwise, we make this service a foreground service.
 
-        // Called when the last client (MainActivity in case of this sample) unbinds from this
-        // service. If this method is called due to a configuration change in MainActivity, we
-        // do nothing. Otherwise, we make this service a foreground service.
         if (!mChangingConfiguration && Utils.requestingLocationUpdates(this)) {
             Log.d(TAG, "Starting foreground service")
 
@@ -206,7 +196,7 @@ class LocationUpdatesService: Service() {
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
              //   mNotificationManager.startServiceInForeground(Intent(applicationContext, LocationUpdatesService.class), NOTIFICATION_ID, getNotification());
             } else {
-                startForeground(NOTIFICATION_ID, getNotification());
+                startForeground(NOTIFICATION_ID, getNotification())
             }
             // startForeground(LocationUpdatesService.NOTIFICATION_ID, getNotification())
         }
@@ -219,11 +209,7 @@ class LocationUpdatesService: Service() {
         Utils.setRequestingLocationUpdates(this, true)
         startService(Intent(applicationContext, LocationUpdatesService::class.java))
         try {
-            mFusedLocationClient!!.requestLocationUpdates(
-                mLocationRequest!!,
-                mLocationCallback!!,
-                Looper.myLooper()!!
-            )
+            mFusedLocationClient!!.requestLocationUpdates(mLocationRequest!!, mLocationCallback!!, Looper.myLooper()!!)
         } catch (unlikely: SecurityException) {
             Utils.setRequestingLocationUpdates(this, false)
             Log.d(TAG, "Lost location permission. Could not request updates. $unlikely")
@@ -274,11 +260,11 @@ class LocationUpdatesService: Service() {
         )
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .addAction(
-                R.drawable.common_google_signin_btn_icon_dark, "LAUNCH",
+                R.drawable.common_google_signin_btn_icon_dark, "Launch app",
                 activityPendingIntent
             )
             .addAction(
-                R.drawable.common_google_signin_btn_icon_dark, "REMOVE UPDATED",
+                R.drawable.common_google_signin_btn_icon_dark, "Stop service",
                 servicePendingIntent
             )
             .setContentText(text)
@@ -376,6 +362,7 @@ class LocationUpdatesService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        println("dddddd service destroyed")
         mServiceHandler!!.removeCallbacksAndMessages(null)
 
     }

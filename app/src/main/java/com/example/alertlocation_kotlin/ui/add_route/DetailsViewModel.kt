@@ -18,6 +18,7 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
     var myCurrentLocation = MutableLiveData<String?>(null)
     var pointsList = MutableLiveData<MutableList<Points>>()
     var allRoutes: LiveData<MutableList<Route>>
+    var switchEnabled: Boolean=false
     init{
         allRoutes = mainRepository.getAll().asLiveData()
         usersToSend.value= mutableListOf()
@@ -59,6 +60,19 @@ class DetailsViewModel(var mainRepository: mainRepository,context: Context) : Vi
 
         }
 
+    }
+
+    fun updateFriendlyName(id: Long, name: String) {
+        viewModelScope.launch(Dispatchers.Default) {
+            kotlin.runCatching {
+                mainRepository.updateFriendlyName(id,name)
+            }.onFailure {
+
+            }.onSuccess {
+                println("savedOrNot $it")
+            }
+
+        }
     }
 
 

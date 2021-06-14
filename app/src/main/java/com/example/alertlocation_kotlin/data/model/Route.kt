@@ -18,7 +18,8 @@ public data class Route(
 ) {
     @Ignore
     var isExpanded:Boolean=false
-
+    @Ignore
+    var isEnabled:Boolean=false
     fun getReceivers(): String {
         var buildString = ""
         users.forEachIndexed { index, user ->

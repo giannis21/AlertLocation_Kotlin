@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:padding="8dp"
         android:layout_margin="12dp"
-
+        app:setColor="@{route.enabled}"
+        android:id="@+id/routeItemContainer"
         android:background="@drawable/edittext_style"
         android:backgroundTint="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
@@ -139,6 +140,7 @@
             android:id="@+id/switch1"
             android:trackTint="@drawable/toggle_style"
             android:trackTintMode="src_over"
+            app:enableSwitch="@{route.enabled}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"

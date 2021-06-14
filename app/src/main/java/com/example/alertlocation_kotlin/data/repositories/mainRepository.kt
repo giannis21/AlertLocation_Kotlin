@@ -12,6 +12,11 @@ class mainRepository(private val routeDao: RouteDao) {
         return 1
     }
 
+    suspend fun updateFriendlyName(id: Long, name: String): Int{
+        routeDao.update(id,name)
+        return 1
+    }
+
     fun getAll(): Flow<MutableList<Route>> {
        return routeDao.getRoutes()
     }

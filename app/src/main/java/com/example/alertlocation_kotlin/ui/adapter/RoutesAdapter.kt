@@ -29,6 +29,7 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
      * (custom ViewHolder).
      */
   var editNameListener : ((Long) -> Unit)?=null
+  var startLocationUpdatedListener : ((Boolean,Route) -> Unit)?=null
   inner  class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(route: Route,context: Context) {
             binding.setVariable(BR.route,route)
@@ -61,18 +62,30 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
 
                     chip.setChipBackgroundColorResource(R.color.teal_200)
                     chip.setTextColor(ContextCompat.getColor(context, R.color.white))
-
-                    chip.setOnCloseIconClickListener {
-                        binding.root.chip_group_users.removeView(it)
-                        val name= (it as Chip).text.toString()
-                        val token= (it as Chip).tag.toString()
-                        viewModel.removeUser(User(name, token))
-                    }
                     binding.root.chip_group_users.addView(chip)
                 }
 
                 binding.root.name_route.setOnClickListener {
                     editNameListener?.invoke(route.id)
+                }
+                binding.root.switch1.setOnClickListener {
+//                    if(viewModel.switchEnabled){
+//                        binding.root.switch1.isChecked=false
+//                        notifyItemChanged(dataSet.indexOf(route))
+//                        return@setOnClickListener
+//                    }
+                    if(route.isEnabled){
+                        startLocationUpdatedListener?.invoke(false,route)
+                        viewModel.switchEnabled=false
+                        route.isEnabled=false
+                        notifyItemChanged(dataSet.indexOf(route))
+                    }else{
+                        startLocationUpdatedListener?.invoke(true,route)
+                        viewModel.switchEnabled=true
+                        route.isEnabled=true
+                        notifyItemChanged(dataSet.indexOf(route))
+                    }
+
                 }
             }
 

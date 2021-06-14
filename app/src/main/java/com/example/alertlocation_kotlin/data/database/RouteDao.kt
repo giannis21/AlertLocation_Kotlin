@@ -15,6 +15,9 @@ interface RouteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(route: Route)
 
+    @Query("UPDATE Route set RouteName=:name where id=:id")
+    suspend fun update(id: Long, name:String)
+
     @Query("SELECT * from Route")
     fun getRoutes(): Flow<MutableList<Route>>
 
