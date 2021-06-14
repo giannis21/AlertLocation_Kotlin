@@ -16,9 +16,20 @@ class mainRepository(private val routeDao: RouteDao) {
         routeDao.update(id,name)
         return 1
     }
+    suspend fun enableRoute(id: Long, isEnabled: Boolean): Int{
+        routeDao.updateSwitch(id,isEnabled)
+        return 1
+    }
+
+    suspend fun removeItem(route:Route): Int{
+        routeDao.removeItem(route)
+        return 1
+    }
 
     fun getAll(): Flow<MutableList<Route>> {
        return routeDao.getRoutes()
     }
+
+
 
 }

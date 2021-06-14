@@ -11,6 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
+import android.widget.Toast
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -33,6 +35,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.bottomsheet_configuration.*
+import kotlinx.android.synthetic.main.details_fragment.view.*
 
 
 class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
@@ -45,7 +48,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
     lateinit var dialog:BottomSheetDialog
     private lateinit var viewModel: DetailsViewModel
     private lateinit var viewModelFactory: ViewmodelFactory
-
+    private lateinit var motionId:MotionLayout
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
@@ -83,7 +86,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
         val webService = NotificationApi(networkConnectionIncterceptor!!)
-        var remoteRepository = RemoteRepository(webService)
+        val remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
@@ -95,13 +98,14 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         }
 
         saveIcon.setOnClickListener {
-           viewModel.getGroupId(viewModel.usersToSend.value ?: mutableListOf())
+           if(!missingInfoHandling())
+              viewModel.getGroupId(viewModel.usersToSend.value ?: mutableListOf())
 
         }
         viewModel.groupNotificationKey.observe(viewLifecycleOwner, Observer {
             it?.let {
                 viewModel.addRouteToDatabase(
-                    Route(0,"route ${System.currentTimeMillis()}",
+                    Route(0,"change name",
                         viewModel.usersToSend.value ?: mutableListOf(),
                         viewModel.pointsList.value ?: mutableListOf(),viewModel.message,it))
                 dialog.dismiss()
@@ -110,6 +114,47 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         })
     }
+
+    private fun missingInfoHandling(): Boolean {
+        if(viewModel.pointsList.value?.isNullOrEmpty()!!){
+            tabLayout.apply {
+                try {
+                    selectTab(getTabAt(1))
+                    Toast.makeText(requireContext(),"You should select at least a point!",Toast.LENGTH_SHORT).show()
+                    return true
+                } catch (e: Exception) {
+                }
+
+            }
+        }
+        if(viewModel.usersToSend.value?.isNullOrEmpty()!!){
+            tabLayout.apply {
+                try {
+                    selectTab(getTabAt(0))
+                    Toast.makeText(requireContext(),"You should add at least a receiver!",Toast.LENGTH_SHORT).show()
+                    return true
+                } catch (e: Exception) {
+                }
+
+            }
+        }
+        if(viewModel.message.isEmpty()){
+            tabLayout.apply {
+                try {
+                    selectTab(getTabAt(0))
+                    Toast.makeText(requireContext(),"Type a message first!",Toast.LENGTH_SHORT).show()
+                    viewModel.transitionToEnd?.postValue(true)
+                    return true
+                } catch (e: Exception) {
+
+                    return true
+                }
+
+            }
+        }
+        return false
+    }
+
     private fun initviewpager() {
 
         val viewPager: ViewPager2 = view?.findViewById(R.id.view_pager) as ViewPager2
@@ -193,6 +238,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         super.onDestroy()
         DetailsFragment.clearValuesListener?.invoke()
         viewModel.groupNotificationKey.postValue(null)
+        viewModel.transitionToEnd?.postValue(null)
     }
 
 

@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.BR
 import com.example.alertlocation_kotlin.R
@@ -22,7 +23,8 @@ import kotlinx.android.synthetic.main.routes_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context,var viewModel: DetailsViewModel) : RecyclerView.Adapter<RoutesAdapter.ViewHolder>() {
+class RoutesAdapter(var context: Context,var viewModel: DetailsViewModel) :  ListAdapter<Route, RoutesAdapter.ViewHolder>(RoutesDiffCallback()) {
+
 
     /**
      * Provide a reference to the type of views that you are using
@@ -30,6 +32,7 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
      */
   var editNameListener : ((Long) -> Unit)?=null
   var startLocationUpdatedListener : ((Boolean,Route) -> Unit)?=null
+
   inner  class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(route: Route,context: Context) {
             binding.setVariable(BR.route,route)
@@ -40,14 +43,14 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
                 route.isExpanded = !isExpanded
                 notifyItemChanged(adapterPosition)
 
-                if (route.isExpanded) {
-                    dataSet.forEach { each_route ->
-                        if (each_route != route && each_route.isExpanded) {
-                            each_route.isExpanded = false
-                            notifyItemChanged(dataSet.indexOf(each_route))
-                        }
-                    }
-                }
+//                if (route.isExpanded) {
+//                    dataSet.forEach { each_route ->
+//                        if (each_route != route && each_route.isExpanded) {
+//                            each_route.isExpanded = false
+//                            notifyItemChanged(dataSet.indexOf(each_route))
+//                        }
+//                    }
+//                }
             }
 
             viewModel.viewModelScope.launch(Dispatchers.Main) {
@@ -69,21 +72,21 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
                     editNameListener?.invoke(route.id)
                 }
                 binding.root.switch1.setOnClickListener {
-//                    if(viewModel.switchEnabled){
-//                        binding.root.switch1.isChecked=false
-//                        notifyItemChanged(dataSet.indexOf(route))
-//                        return@setOnClickListener
-//                    }
+
                     if(route.isEnabled){
                         startLocationUpdatedListener?.invoke(false,route)
-                        viewModel.switchEnabled=false
-                        route.isEnabled=false
-                        notifyItemChanged(dataSet.indexOf(route))
+                        viewModel.enableRoute(route.id,false)
+
                     }else{
-                        startLocationUpdatedListener?.invoke(true,route)
-                        viewModel.switchEnabled=true
-                        route.isEnabled=true
-                        notifyItemChanged(dataSet.indexOf(route))
+                        val switchEnabled= viewModel.allRoutes.value?.find { it.isEnabled }
+                        if(switchEnabled == null){
+                            startLocationUpdatedListener?.invoke(true,route)
+                            viewModel.enableRoute(route.id,true)
+                        }else{
+                            binding.root.switch1.isChecked=false
+                        }
+
+
                     }
 
                 }
@@ -103,47 +106,52 @@ class RoutesAdapter(private val dataSet: MutableList<Route>,var context: Context
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        var route= dataSet[position]
+        val route= getItem(position)
         route.let {
             viewHolder.bind(it,context = context)
         }
 
     }
 
-    override fun getItemCount() = dataSet.size
+    override fun getItemCount() = currentList.size
 
-    fun updateData(routes: MutableList<Route>) {
-        val diffCallback = RoutesDiffCallback(this.dataSet, routes)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-
-        this.dataSet.clear()
-        this.dataSet.addAll(routes)
-        diffResult.dispatchUpdatesTo(this)
+    fun getItem1(position: Int): Route {
+         return getItem(position)
     }
 
-    fun resetSwitch(mRoute: Route) {
 
-         val route=dataSet[dataSet.indexOf(mRoute)]
-         route.isEnabled=false
-         notifyItemChanged(dataSet.indexOf(mRoute))
-    }
+//    class RoutesDiffCallback(
+//        private val oldList: List<Route>,
+//        private val newList: List<Route>
+//    ) : DiffUtil.Callback() {
+//
+//        override fun getOldListSize() = oldList.size
+//
+//        override fun getNewListSize() = newList.size
+//
+//        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+//            return oldList[oldItemPosition] == newList[newItemPosition]
+//        }
+//
+//        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+//            return oldList[oldItemPosition].RouteName == newList[newItemPosition].RouteName
+//        }
+//
+//    }
 
-    class RoutesDiffCallback(
-        private val oldList: List<Route>,
-        private val newList: List<Route>
-    ) : DiffUtil.Callback() {
-
-        override fun getOldListSize() = oldList.size
-
-        override fun getNewListSize() = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition] == newList[newItemPosition]
+    private class RoutesDiffCallback : DiffUtil.ItemCallback<Route>() {
+        override fun areItemsTheSame(
+            oldItem: Route,
+            newItem: Route
+        ): Boolean {
+            return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition].RouteName == newList[newItemPosition].RouteName
+        override fun areContentsTheSame(
+            oldItem: Route,
+            newItem: Route
+        ): Boolean {
+            return oldItem == newItem
         }
-
     }
 }

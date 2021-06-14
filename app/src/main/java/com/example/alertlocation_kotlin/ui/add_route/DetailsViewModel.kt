@@ -1,6 +1,7 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
 import android.content.Context
+import android.text.BoringLayout
 import androidx.lifecycle.*
 import com.example.alertlocation_kotlin.RemoteRepository
 import com.example.alertlocation_kotlin.data.model.Points
@@ -15,13 +16,14 @@ import kotlinx.coroutines.launch
 class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository: RemoteRepository, context: Context) : ViewModel() {
 
 
+    var transitionToEnd= MutableLiveData<Boolean?> (null)
     var route_name: MutableLiveData<String>? = null
     var message: String =""
     var usersToSend = MutableLiveData<MutableList<User>>()
     var myCurrentLocation = MutableLiveData<String?>(null)
     var pointsList = MutableLiveData<MutableList<Points>>()
     var allRoutes: LiveData<MutableList<Route>>
-    var switchEnabled: Boolean=false
+
     var groupNotificationKey=MutableLiveData<String?>(null)
     init{
         allRoutes = mainRepository.getAll().asLiveData()
@@ -79,6 +81,19 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
         }
     }
 
+    fun enableRoute(id: Long, isEnabled: Boolean) {
+        viewModelScope.launch(Dispatchers.Default) {
+            kotlin.runCatching {
+                mainRepository.enableRoute(id,isEnabled)
+            }.onFailure {
+
+            }.onSuccess {
+                println("savedOrNot $it")
+            }
+
+        }
+    }
+
     fun getGroupId(users: MutableList<User>) {
 
         viewModelScope.launch(Dispatchers.Default) {
@@ -111,6 +126,19 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
             }.onSuccess { response ->
 
             }//https://firebase.google.com/docs/cloud-messaging/android/device-group?utm_source=studio
+
+        }
+    }
+
+    fun removeItem(route: Route) {
+        viewModelScope.launch(Dispatchers.Default) {
+            kotlin.runCatching {
+                mainRepository.removeItem(route)
+            }.onFailure {
+
+            }.onSuccess {
+
+            }
 
         }
     }

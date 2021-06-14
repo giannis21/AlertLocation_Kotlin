@@ -1,10 +1,7 @@
 package com.example.tvshows
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.example.alertlocation_kotlin.data.model.Route
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +14,12 @@ interface RouteDao {
 
     @Query("UPDATE Route set RouteName=:name where id=:id")
     suspend fun update(id: Long, name:String)
+
+    @Query("UPDATE Route set isEnabled=:isEnabled where id=:id")
+    suspend fun updateSwitch(id: Long, isEnabled:Boolean)
+
+    @Delete()
+    suspend fun removeItem(route: Route)
 
     @Query("SELECT * from Route")
     fun getRoutes(): Flow<MutableList<Route>>

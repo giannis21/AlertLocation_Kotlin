@@ -17,6 +17,7 @@ import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -69,6 +70,11 @@ class DetailsFragment : Fragment() {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
+        viewModel.transitionToEnd?.observe(viewLifecycleOwner, Observer {
+            it?.let {
+                motionId.transitionToEnd()
+            }
+        })
 
         val recyclerview = view.findViewById<RecyclerView>(R.id.recyclerview)
         usersAdapter = UsersAdapter(requireContext(), mutableListOf(),viewModel)

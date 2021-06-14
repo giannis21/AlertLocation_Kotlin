@@ -23,7 +23,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.*
 
 import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
@@ -35,6 +37,7 @@ import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
+import com.example.alertlocation_kotlin.ui.adapter.SwipeToDeleteCallback
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 import com.example.alertlocationkotlin.NotificationApi
@@ -44,6 +47,7 @@ import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.android.synthetic.main.details_fragment.*
 import kotlinx.android.synthetic.main.fragment_main_screen.*
 import java.io.IOException
 import java.util.*
@@ -107,14 +111,15 @@ class MainScreenFragment : Fragment() {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
-        routesAdapter= RoutesAdapter(mutableListOf(), requireContext(), viewModel)
+        routesAdapter= RoutesAdapter(requireContext(), viewModel)
         routesRecyclerview.adapter=routesAdapter
         linearLayoutManager = LinearLayoutManager(requireContext())
         routesRecyclerview.layoutManager = linearLayoutManager
+        initSwipe()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-        floatingActionButton.setOnClickListener {
 
+        floatingActionButton.setOnClickListener {
             if(checkLocationPermission()){
                 val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
                 dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
@@ -171,10 +176,7 @@ class MainScreenFragment : Fragment() {
             if(startService)
             {
                 mRoute=route
-                Intent(requireContext(), TrackingService::class.java).also {
-                    it.action = ACTION_START_OR_RESUME_SERVICE
-                    requireContext().startService(it)
-                }
+                startService()
             }
             else{
                 mRoute=null
@@ -188,7 +190,7 @@ class MainScreenFragment : Fragment() {
             if (it.isNullOrEmpty())
                 return@Observer
 
-            routesAdapter.updateData(it)
+            routesAdapter.submitList(it)
 
         })
 
@@ -219,6 +221,13 @@ class MainScreenFragment : Fragment() {
         })
 
 
+    }
+
+    private fun startService() {
+        Intent(requireContext(), TrackingService::class.java).also {
+            it.action = ACTION_START_OR_RESUME_SERVICE
+            requireContext().startService(it)
+        }
     }
 
     private fun createLocationRequest(): LocationRequest {
@@ -271,6 +280,22 @@ class MainScreenFragment : Fragment() {
         }
     }
 
+    private fun initSwipe() {
+
+
+        val swipeHandler = object : SwipeToDeleteCallback(requireContext()) {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val route =routesAdapter.getItem1(position)
+
+                viewModel.removeItem(route)
+
+            }
+        }
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(routesRecyclerview)
+    }
+
 
     private fun getAddress(lat: Double, lon: Double): String {
         var errorMessage = ""
@@ -303,10 +328,13 @@ class MainScreenFragment : Fragment() {
 
     }
   fun stopService(){
-      Intent(requireContext(), TrackingService::class.java).also {
-          it.action = ACTION_START_OR_RESUME_SERVICE
-          requireContext().stopService(it)
-      }
+      try {
+          Intent(requireContext(), TrackingService::class.java).also {
+              it.action = ACTION_START_OR_RESUME_SERVICE
+              requireContext().stopService(it)
+          }
+      }catch (e:Exception){}
+
   }
     private inner class MyReceiver : BroadcastReceiver() {
 
@@ -315,20 +343,20 @@ class MainScreenFragment : Fragment() {
             val serviceStoped = intent.getStringExtra(EXTRA_LOC_STOPED)
 
             serviceStoped?.let {
-                //edo tha ginei update i basi
+                disableSwitch()
             }
 
             if (current_location != null && mRoute != null) {
                 mRoute!!.points.forEachIndexed { index, point ->
                     val location_set_byUser = Location("")
-                    location_set_byUser.latitude = point.latitude.toDouble()
-                    location_set_byUser.longitude = point.longitude.toDouble()
+                    location_set_byUser.latitude = point.latitude
+                    location_set_byUser.longitude = point.longitude
                     val distanceInMeters: Float = current_location.distanceTo(location_set_byUser)
 
                     if (distanceInMeters < 50) {
                         mRoute?.let {
                             viewModel.sendPushNotification(it)
-                            routesAdapter.resetSwitch(mRoute!!)
+                            disableSwitch()
                             stopService()
                         }
                     }
@@ -434,6 +462,15 @@ class MainScreenFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         viewModel.myCurrentLocation.postValue(null)
+        disableSwitch()
+
+
+    }
+
+    fun disableSwitch(){
+        mRoute?.let {
+            viewModel.enableRoute(it.id,false)
+        }
     }
 
 }

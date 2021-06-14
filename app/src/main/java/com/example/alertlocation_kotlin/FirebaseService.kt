@@ -1,5 +1,6 @@
 package com.example.alertlocationkotlin
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_HIGH
@@ -76,6 +77,8 @@ class FirebaseService : FirebaseMessagingService() {
             val pendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_ONE_SHOT)
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(message.data["title"])
+                .setStyle(NotificationCompat.BigTextStyle().bigText(message.data["text"]))
+
                 .setContentText(message.data["text"])
                 .setSmallIcon(R.drawable.common_google_signin_btn_icon_dark)
                 .setAutoCancel(true)
