@@ -4,7 +4,7 @@ class Constants {
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 99
         const val BASE_URL = "https://fcm.googleapis.com"
-        const val SERVER_KEY = "AAAAn9DS5A8:APA91bEiM503MLqGDLC37iVmVkosYMb-DtraN9LhOy_lSSzpGpNQ6R36hj8qQPuz3E_o3l0DQix3nSUMH9xCV6DOVSNlqWfKfMmGa4zl0PfSGojf8U7a8VWoOxM1anGsqW9HRdJH3R96"
+        const val SERVER_KEY = "AAAA2rXsHUE:APA91bG85vWoMpIn0ZuyLQjKY0608hlLrswkuu1xURiU4M3xQpIiDoyJ0mTqGXHUq2crLiRdkPfl-EWLSGQMnDFa65Pd28xomuM_ZCRUS68bBlWhSaqtXSocSKv6ei90YHnGhZvPSHYu"
         const val CONTENT_TYPE = "application/json"
         val PACKAGE_NAME = "com.example.alertlocation_kotlin"
 

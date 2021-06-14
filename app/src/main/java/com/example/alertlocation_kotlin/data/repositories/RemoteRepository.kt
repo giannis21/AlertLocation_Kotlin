@@ -7,7 +7,7 @@ import retrofit2.Response
 
 class RemoteRepository(private val my_Api: NotificationApi) {
 
-    suspend fun fetch_genres(notification: PushNotification): Response<ResponseBody> {
+    suspend fun postNotification(notification: PushNotification): Response<ResponseBody> {
         return my_Api.postNotification(notification)
     }
 

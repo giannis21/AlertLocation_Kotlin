@@ -88,4 +88,6 @@ dependencies {
     implementation 'android.arch.lifecycle:extensions:1.1.1'
 
     implementation 'com.google.android.gms:play-services-maps:17.0.1'
+
+    implementation "com.squareup.okhttp3:logging-interceptor:4.2.2"
 }

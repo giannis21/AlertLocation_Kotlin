@@ -104,9 +104,10 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     Route(0,"route ${System.currentTimeMillis()}",
                         viewModel.usersToSend.value ?: mutableListOf(),
                         viewModel.pointsList.value ?: mutableListOf(),viewModel.message,it))
+                dialog.dismiss()
             }
 
-            dialog.dismiss()
+
         })
     }
     private fun initviewpager() {
@@ -191,6 +192,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
     override fun onDestroy() {
         super.onDestroy()
         DetailsFragment.clearValuesListener?.invoke()
+        viewModel.groupNotificationKey.postValue(null)
     }
 
 
