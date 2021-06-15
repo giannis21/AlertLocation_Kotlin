@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/cardView"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:cardCornerRadius="12dp"
+    android:elevation="10dp"
+    android:backgroundTint="@color/LightRed">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/BannerConstraint"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/redBannerTxtV"
+            style="@style/caption_bold"
+            android:layout_width="0dp"
+            android:layout_marginEnd="10dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toStartOf="@+id/imageView"
+            android:text="Η υποβολή πραγματοποιήθηκε επιτυχώς"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:tint="@color/white"
+            tools:src="@drawable/ic_save"
+            app:layout_constraintBottom_toBottomOf="@+id/redBannerTxtV"
+            app:layout_constraintEnd_toEndOf="@+id/BannerConstraint"
+            app:layout_constraintTop_toTopOf="@+id/redBannerTxtV"
+             />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
+
+

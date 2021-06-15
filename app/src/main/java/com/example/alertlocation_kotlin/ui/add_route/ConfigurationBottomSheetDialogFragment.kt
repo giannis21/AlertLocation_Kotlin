@@ -5,6 +5,8 @@ import android.content.Context
 import android.graphics.Insets
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
@@ -20,10 +22,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
-import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.RemoteRepository
-import com.example.alertlocation_kotlin.ViewmodelFactory
+import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
@@ -120,7 +119,8 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
             tabLayout.apply {
                 try {
                     selectTab(getTabAt(1))
-                    Toast.makeText(requireContext(),"You should select at least a point!",Toast.LENGTH_SHORT).show()
+                    (requireActivity() as MainActivity).showBanner("You should select at least a point on map!",false)
+
                     return true
                 } catch (e: Exception) {
                 }
@@ -131,7 +131,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
             tabLayout.apply {
                 try {
                     selectTab(getTabAt(0))
-                    Toast.makeText(requireContext(),"You should add at least a receiver!",Toast.LENGTH_SHORT).show()
+                    (requireActivity() as MainActivity).showBanner("You should add at least a receiver!",false)
                     return true
                 } catch (e: Exception) {
                 }
@@ -142,8 +142,13 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
             tabLayout.apply {
                 try {
                     selectTab(getTabAt(0))
-                    Toast.makeText(requireContext(),"Type a message first!",Toast.LENGTH_SHORT).show()
-                    viewModel.transitionToEnd?.postValue(true)
+                    (requireActivity() as MainActivity).showBanner("Please type a message first!",false)
+
+                    Toast.makeText(requireContext(),"",Toast.LENGTH_SHORT).show()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        viewModel.transitionToEnd.postValue(true)
+                    }, 2000)
+
                     return true
                 } catch (e: Exception) {
 

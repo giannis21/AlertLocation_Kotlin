@@ -287,9 +287,8 @@ class MainScreenFragment : Fragment() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
                 val route =routesAdapter.getItem1(position)
-
                 viewModel.removeItem(route)
-
+                (activity as MainActivity).showBanner("Route succesfully deleted!")
             }
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
@@ -406,6 +405,7 @@ class MainScreenFragment : Fragment() {
             if(editText?.text?.isNotBlank()!!) {
                 viewModel.updateFriendlyName(id, editText.text.toString())
                 dialog.dismiss()
+                (activity as MainActivity).showBanner("Route name updated succesfully!")
             }
         }
 
