@@ -115,7 +115,7 @@ class MainScreenFragment : Fragment() {
         routesRecyclerview.adapter=routesAdapter
         linearLayoutManager = LinearLayoutManager(requireContext())
         routesRecyclerview.layoutManager = linearLayoutManager
-        initSwipe()
+        //initSwipe()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
