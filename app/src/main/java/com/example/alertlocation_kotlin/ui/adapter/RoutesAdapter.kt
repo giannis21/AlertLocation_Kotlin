@@ -9,10 +9,11 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.*
 import com.example.alertlocation_kotlin.BR
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.data.model.Points
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.databinding.RoutesItemBinding
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
@@ -29,7 +30,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-class RoutesAdapter(var context: Context, var viewModel: DetailsViewModel) :  ListAdapter<Route, RoutesAdapter.ViewHolder>(
+class RoutesAdapter(
+    var openMapListenerCallback: ((Points) -> Unit)?=null,
+    var context: Context,
+    var viewModel: DetailsViewModel
+) :  ListAdapter<Route, RoutesAdapter.ViewHolder>(
     RoutesDiffCallback()
 ){
 
@@ -41,27 +46,18 @@ class RoutesAdapter(var context: Context, var viewModel: DetailsViewModel) :  Li
   var editNameListener : ((Long) -> Unit)?=null
   var startLocationUpdatedListener : ((Boolean, Route) -> Unit)?=null
   var mapCurrent: GoogleMap? = null
-  inner  class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root),OnMapReadyCallback  {
+  val snapHelper: SnapHelper = LinearSnapHelper()
+  var addMarkerLive = MutableLiveData<LatLng>()
+  inner  class ViewHolder(val binding: ViewDataBinding) : RecyclerView.ViewHolder(binding.root) {
 
+      fun bind(route: Route, context: Context) {
+          binding.setVariable(BR.route, route)
 
-      var map: MapView? = null
-      init {
-          map = binding.root.mapView.findViewById(R.id.mapView)
-          if (map != null) {
-              map!!.onCreate(null)
-              map!!.onResume()
-              map!!.getMapAsync(this)
-          }
-      }
+          binding.root.expand_icon.setOnClickListener {
 
-        fun bind(route: Route, context: Context) {
-            binding.setVariable(BR.route, route)
-
-            binding.root.expand_icon.setOnClickListener {
-
-                val isExpanded = route.isExpanded
-                route.isExpanded = !isExpanded
-                notifyItemChanged(adapterPosition)
+              val isExpanded = route.isExpanded
+              route.isExpanded = !isExpanded
+              notifyItemChanged(adapterPosition)
 
 //                if (route.isExpanded) {
 //                    dataSet.forEach { each_route ->
@@ -71,96 +67,67 @@ class RoutesAdapter(var context: Context, var viewModel: DetailsViewModel) :  Li
 //                        }
 //                    }
 //                }
-            }
+          }
 
-            viewModel.viewModelScope.launch(Dispatchers.Main) {
-                binding.root.chip_group_users.removeAllViews()
+          viewModel.viewModelScope.launch(Dispatchers.Main) {
+              binding.root.chip_group_users.removeAllViews()
 
-                route.users.forEach { user ->
-                    val chip = Chip(context)
-                    chip.text = user.username
-                    chip.tag = user.token
-                    chip.textSize=17f
-                    //chip.chipIcon = ContextCompat.getDrawable(context,R.drawable.ic_save)
+              route.users.forEach { user ->
+                  val chip = Chip(context)
+                  chip.text = user.username
+                  chip.tag = user.token
+                  chip.textSize = 17f
+                  //chip.chipIcon = ContextCompat.getDrawable(context,R.drawable.ic_save)
 
-                    chip.setChipBackgroundColorResource(R.color.teal_200)
-                    chip.setTextColor(ContextCompat.getColor(context, R.color.white))
-                    binding.root.chip_group_users.addView(chip)
-                }
+                  chip.setChipBackgroundColorResource(R.color.teal_200)
+                  chip.setTextColor(ContextCompat.getColor(context, R.color.white))
+                  binding.root.chip_group_users.addView(chip)
+              }
 
-                binding.root.name_route.setOnClickListener {
-                    editNameListener?.invoke(route.id)
-                }
-                binding.root.switch1.setOnClickListener {
+              binding.root.name_route.setOnClickListener {
+                  editNameListener?.invoke(route.id)
+              }
+              binding.root.switch1.setOnClickListener {
 
-                    if(route.isEnabled){
-                        startLocationUpdatedListener?.invoke(false, route)
-                        viewModel.enableRoute(route.id, false)
+                  if (route.isEnabled) {
+                      startLocationUpdatedListener?.invoke(false, route)
+                      viewModel.enableRoute(route.id, false)
 
-                    }else{
-                        val switchEnabled= viewModel.allRoutes.value?.find { it.isEnabled }
-                        if(switchEnabled == null){
-                            startLocationUpdatedListener?.invoke(true, route)
-                            viewModel.enableRoute(route.id, true)
-                        }else{
-                            binding.root.switch1.isChecked=false
-                        }
-
-
-                    }
-
-                }
-
-                binding.root.addressRecyclerview.let { recycler ->
-                    val list= currentList.map { it.points }[0] ?: arrayListOf()
-                    val adapter = AddressAdapter(list, context, viewModel){
-
-                    }
-                    recycler.layoutManager = LinearLayoutManager(
-                        context,
-                        LinearLayoutManager.HORIZONTAL,
-                        false
-                    )
-                    recycler.adapter = adapter
-                    val snapHelper: SnapHelper = LinearSnapHelper()
-                    snapHelper.attachToRecyclerView(recycler)
-                    recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-                        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                            super.onScrolled(recyclerView, dx, dy)
-
-                        }
-
-                        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                            super.onScrollStateChanged(recyclerView, newState)
-                            val visibleChild: View = recyclerView.getChildAt(0)
-                            val firstChild: Int = recyclerView.getChildAdapterPosition(visibleChild)
-                             addMarker(LatLng(list[firstChild].latitude,list[firstChild].latitude))
-                        }
-                    })
-                }
+                  } else {
+                      val switchEnabled = viewModel.allRoutes.value?.find { it.isEnabled }
+                      if (switchEnabled == null) {
+                          startLocationUpdatedListener?.invoke(true, route)
+                          viewModel.enableRoute(route.id, true)
+                      } else {
+                          binding.root.switch1.isChecked = false
+                      }
 
 
-            }
+                  }
 
-        }
+              }
 
-      override fun onMapReady(googleMap: GoogleMap) {
-          MapsInitializer.initialize(context)
-          mapCurrent = googleMap;
+              binding.root.addressRecyclerview.let { recycler ->
 
+                  val adapter = AddressAdapter(route.points, context, viewModel) {
+                      openMapListenerCallback?.invoke(it)
+                  }
+                  recycler.layoutManager = LinearLayoutManager(
+                      context,
+                      LinearLayoutManager.HORIZONTAL,
+                      false
+                  )
+                  recycler.adapter = adapter
+
+                  snapHelper.attachToRecyclerView(recycler)
+
+              }
+
+
+          }
 
       }
-  }
-  fun addMarker(location:LatLng){
-      mapCurrent!!.addMarker(
-          MarkerOptions()
-              .position(location)
-              //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
-              .icon(
-                  BitmapDescriptorFactory
-                      .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-              )
-      )
+
   }
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {

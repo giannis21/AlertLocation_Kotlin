@@ -18,6 +18,7 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.animation.doOnEnd
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -36,6 +37,7 @@ import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.alertlocation_kotlin.ext.SharedFunctions.getAddress
 import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.adapter.SwipeToDeleteCallback
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
@@ -111,7 +113,11 @@ class MainScreenFragment : Fragment() {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
-        routesAdapter= RoutesAdapter(requireContext(), viewModel)
+        routesAdapter= RoutesAdapter({
+            viewModel.addressSelected.postValue(it)
+            val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
+            dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+        },requireContext(), viewModel)
         routesRecyclerview.adapter=routesAdapter
         linearLayoutManager = LinearLayoutManager(requireContext())
         routesRecyclerview.layoutManager = linearLayoutManager
@@ -133,7 +139,7 @@ class MainScreenFragment : Fragment() {
 
         settingsIcon.setOnClickListener {
             if(!viewExpanded){
-                val anim = ObjectAnimator.ofFloat(mainContainer, "translationY", 0f, 350f)
+                val anim = ObjectAnimator.ofFloat(mainContainer, "translationY", 0f, 850f)
                 val rotateAnimation = ObjectAnimator.ofFloat(
                     settingsIcon,
                     "rotation",
@@ -147,9 +153,12 @@ class MainScreenFragment : Fragment() {
                 animatorSet.duration = 700
 
                 animatorSet.start()
+                animatorSet.doOnEnd {
+                    (activity as MainActivity).showSettings(true)
+                }
                 viewExpanded=true
             }else{
-                val anim = ObjectAnimator.ofFloat(mainContainer, "translationY", 350f, 0f)
+                val anim = ObjectAnimator.ofFloat(mainContainer, "translationY", 850f, 0f)
                 val rotateAnimation = ObjectAnimator.ofFloat(
                     settingsIcon,
                     "rotation",
@@ -163,13 +172,15 @@ class MainScreenFragment : Fragment() {
                 animatorSet.duration = 700
 
                 animatorSet.start()
+                (activity as MainActivity).showSettings(false)
+
                 viewExpanded=false
             }
 
         }
 
         routesAdapter.editNameListener ={
-            showDialog(it)
+            (activity as MainActivity).showDialog(it)
         }
 
         routesAdapter.startLocationUpdatedListener ={ startService, route ->
@@ -203,15 +214,10 @@ class MainScreenFragment : Fragment() {
                         myClip = ClipData.newPlainText("text", it)
                         myClip?.let { _ ->
                             myClipboard!!.setPrimaryClip(myClip!!)
-                            Toast.makeText(requireContext(), "$it Copied", Toast.LENGTH_SHORT)
-                                .show()
+                            (activity as MainActivity).showBanner("$it Copied",true)
                         }
                     } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Something went wrong, try again!",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        (activity as MainActivity).showBanner("Something went wrong, try again!",true)
                     }
                 }
             } catch (e: Exception) {
@@ -252,10 +258,7 @@ class MainScreenFragment : Fragment() {
                     .addOnSuccessListener { location: Location? ->
                         location?.let {
                             viewModel.myCurrentLocation.postValue(
-                                getAddress(
-                                    it.latitude,
-                                    it.longitude
-                                )
+                                getAddress(requireContext(), it.latitude, it.longitude)
                             )
                         }
                     }
@@ -296,36 +299,7 @@ class MainScreenFragment : Fragment() {
     }
 
 
-    private fun getAddress(lat: Double, lon: Double): String {
-        var errorMessage = ""
-        var addresses: List<Address> = emptyList()
-        val geocoder = Geocoder(activity?.applicationContext, Locale.getDefault())
-        try {
-            addresses = geocoder.getFromLocation(
-                lat,
-                lon,
 
-                1
-            )
-        } catch (ioException: IOException) {
-            return ""
-        } catch (illegalArgumentException: IllegalArgumentException) {
-            return ""
-        }
-
-        // Handle case where no address was found.
-        return if (addresses.isEmpty()) {
-            ""
-        } else {
-            val address = addresses[0]
-
-            val addressFragments = with(address) {
-                (0..maxAddressLineIndex).map { getAddressLine(it) }
-            }
-            addressFragments.joinToString(separator = "\n")
-        }
-
-    }
   fun stopService(){
       try {
           Intent(requireContext(), TrackingService::class.java).also {
@@ -395,22 +369,7 @@ class MainScreenFragment : Fragment() {
             IntentFilter(ACTION_BROADCAST)
         )
     }
-    fun showDialog(id: Long) {
-        val dialog = BottomSheetDialog(requireContext())
-        val inflater = context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = inflater.inflate(R.layout.layout_bottom_sheet, null)
-        dialog.setContentView(view)
-        val editText  =dialog.findViewById<TextInputLayout>(R.id.textInputLayout)?.editText
-        dialog.findViewById<TextView>(R.id.okayBtn)?.setOnClickListener {
-            if(editText?.text?.isNotBlank()!!) {
-                viewModel.updateFriendlyName(id, editText.text.toString())
-                dialog.dismiss()
-                (activity as MainActivity).showBanner("Route name updated succesfully!")
-            }
-        }
 
-        dialog.show()
-    }
 
 
 

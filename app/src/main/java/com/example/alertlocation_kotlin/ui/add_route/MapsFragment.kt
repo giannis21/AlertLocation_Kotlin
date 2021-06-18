@@ -67,9 +67,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
         viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
-        val anim = ObjectAnimator.ofFloat(actionsContainer, "translationX", 90f, 0f)
-        anim.duration = 2000
-        anim.start()
+
+
 
         findMe.setOnClickListener {
             find_Me()
@@ -212,6 +211,37 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                 )
                 floatingActionButton.visibility = View.VISIBLE
             }
+        }
+        if(viewModel.addressSelected.value !=null){
+            actionsContainer.visibility=View.GONE
+            val lat=viewModel.addressSelected.value!!.latitude
+            val long= viewModel.addressSelected!!.value!!.longitude
+            val address= viewModel.addressSelected.value!!.address
+            val latLng=LatLng(lat,long)
+            mGoogleMap.addMarker(
+                MarkerOptions()
+                    .position(latLng)
+                    .title(address)
+                    //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
+                    .icon(
+                        BitmapDescriptorFactory
+                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    )
+            )
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+            mGoogleMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(
+                        lat,
+                        long
+                    ), 15.0f
+                )
+            )
+        }else{
+
+            val anim = ObjectAnimator.ofFloat(actionsContainer, "translationX", 90f, 0f)
+            anim.duration = 2000
+            anim.start()
         }
 
     }

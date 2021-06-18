@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.BR
 import com.example.alertlocation_kotlin.R
@@ -13,7 +14,7 @@ import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 import kotlinx.android.synthetic.main.routes_item.view.*
 
-class AddressAdapter(var list: List<Points>,var  context: Context, var viewModel: DetailsViewModel,var callback:(()-> Unit)?=null) : RecyclerView.Adapter<AddressAdapter.ViewHolder>() {
+class AddressAdapter(var list: List<Points>,var  context: Context, var viewModel: DetailsViewModel,var callback:((Points)-> Unit)?=null) : RecyclerView.Adapter<AddressAdapter.ViewHolder>() {
 
 
     /**
@@ -22,6 +23,7 @@ class AddressAdapter(var list: List<Points>,var  context: Context, var viewModel
      */
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textView: TextView = view.findViewById(R.id.addressTxt)
+        val routeItemContainer: ConstraintLayout = view.findViewById(R.id.routeItemContainer)
 
     }
 
@@ -40,6 +42,9 @@ class AddressAdapter(var list: List<Points>,var  context: Context, var viewModel
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
         viewHolder.textView.text = list[position].address
+        viewHolder.routeItemContainer.setOnClickListener {
+            callback?.invoke(list[position])
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)

@@ -1,7 +1,6 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
 import android.content.Context
-import android.text.BoringLayout
 import androidx.lifecycle.*
 import com.example.alertlocation_kotlin.RemoteRepository
 import com.example.alertlocation_kotlin.data.model.Points
@@ -9,19 +8,26 @@ import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocationkotlin.*
-import kotlinx.coroutines.CoroutineScope
+import com.google.firebase.database.*
+import kotlinx.android.synthetic.main.fragment_username.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository: RemoteRepository, context: Context) : ViewModel() {
+
+class DetailsViewModel(
+    var mainRepository: mainRepository,
+    var remoteRepository: RemoteRepository,
+    context: Context
+) : ViewModel() {
 
 
-    var transitionToEnd= MutableLiveData<Boolean?> (null)
+    var transitionToEnd= MutableLiveData<Boolean?>(null)
     var route_name: MutableLiveData<String>? = null
     var message: String =""
     var usersToSend = MutableLiveData<MutableList<User>>()
     var myCurrentLocation = MutableLiveData<String?>(null)
     var pointsList = MutableLiveData<MutableList<Points>>()
+    var addressSelected = MutableLiveData<Points?>(null)
     var allRoutes: LiveData<MutableList<Route>>
 
     var groupNotificationKey=MutableLiveData<String?>(null)
@@ -71,7 +77,7 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
     fun updateFriendlyName(id: Long, name: String) {
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
-                mainRepository.updateFriendlyName(id,name)
+                mainRepository.updateFriendlyName(id, name)
             }.onFailure {
 
             }.onSuccess {
@@ -84,7 +90,7 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
     fun enableRoute(id: Long, isEnabled: Boolean) {
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
-                mainRepository.enableRoute(id,isEnabled)
+                mainRepository.enableRoute(id, isEnabled)
             }.onFailure {
 
             }.onSuccess {
@@ -98,9 +104,13 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
 
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
-                remoteRepository.createGroupNotification(  Group(
-                    "create", System.currentTimeMillis().toString(), users.map { it -> it.token }.toMutableList()
-                ))
+                remoteRepository.createGroupNotification(
+                    Group(
+                        "create",
+                        System.currentTimeMillis().toString(),
+                        users.map { it -> it.token }.toMutableList()
+                    )
+                )
             }.onFailure {
 
             }.onSuccess { response ->
@@ -118,8 +128,10 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
                 remoteRepository.postNotification(
-                    PushNotification(NotificationData(route.message,route.RouteName),
-                        route.notificationGroupId)
+                    PushNotification(
+                        NotificationData(route.message, route.RouteName),
+                        route.notificationGroupId
+                    )
                 )
             }.onFailure {
 
@@ -141,6 +153,45 @@ class DetailsViewModel(var mainRepository: mainRepository, var remoteRepository:
             }
 
         }
+    }
+
+    fun updateUniqueId(
+        uniqueUsername: String,
+        token: String,
+        update: Boolean,
+        previusId:String?=null,
+        successCallback: ((Boolean) -> Unit)
+    ) {
+        val database = FirebaseDatabase.getInstance()
+        val myRef = database.getReference("Users")
+        val firebaseSearchQuery: Query = myRef.child(uniqueUsername)
+
+        firebaseSearchQuery.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if (!dataSnapshot.exists()) {
+
+                    if (update) {
+                        myRef.child(uniqueUsername).removeValue()
+                        myRef.child(uniqueUsername).setValue(User(uniqueUsername, token))
+//                        val updates: MutableMap<String, Any> = HashMap()
+//                        updates["username"] = uniqueUsername
+//                        updates["token"] = token
+//
+//                        myRef.child(previusId ?: uniqueUsername).updateChildren(updates)
+                    } else {
+                        myRef.child(uniqueUsername).setValue(User(uniqueUsername, token))
+                    }
+
+                    successCallback.invoke(true)
+                } else
+                    successCallback.invoke(false)
+
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                throw databaseError.toException()
+            }
+        })
     }
 
 

@@ -26,7 +26,7 @@ object BindingAdapter {
         if(isEnabled)
             this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.teal_700))
          else
-            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.white))
+            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.white_msg))
 
     }
 

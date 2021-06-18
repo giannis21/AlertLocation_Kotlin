@@ -30,7 +30,7 @@
             android:id="@+id/message_icon">
             <CustomAttribute
                 motion:attributeName="colorFilter"
-                motion:customColorValue="@color/white" />
+                motion:customColorValue="@color/CoolGray" />
         </Constraint>
         <Constraint
             android:id="@+id/linearLayout2"

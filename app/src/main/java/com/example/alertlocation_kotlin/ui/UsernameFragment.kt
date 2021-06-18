@@ -12,10 +12,8 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
+import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.RemoteRepository
-import com.example.alertlocation_kotlin.ViewmodelFactory
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.User
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
@@ -93,24 +91,15 @@ class UsernameFragment : Fragment() {
             return
         }
         btnSend.setOnClickListener {
-            val database = FirebaseDatabase.getInstance()
-            val myRef = database.getReference("Users")
-            val firebaseSearchQuery: Query = myRef.child(uniqueUsername.editText?.text.toString())
+            viewModel.updateUniqueId(uniqueUsername.editText?.text.toString(),FirebaseService.token.toString(),false){
+                if(it) {
+                    FirebaseService.uniqueId= uniqueUsername.editText?.text.toString()
 
-            firebaseSearchQuery.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if(!dataSnapshot.exists()) {
-                        myRef.child(uniqueUsername.editText?.text.toString()).setValue(User(uniqueUsername.editText?.text.toString(),FirebaseService.token.toString()))
-                        findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
-                    }else
-                        errorMsg.visibility=View.VISIBLE
+                    findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
+                }else
+                    errorMsg.visibility= View.VISIBLE
+            }
 
-                }
-
-                override fun onCancelled(databaseError: DatabaseError) {
-                    throw databaseError.toException()
-                }
-            })
         }
     }
 

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/holo_blue_dark"
+    android:background="@android:color/white"
 
     tools:context=".ui.add_route.DetailsFragment">
 
@@ -36,7 +36,7 @@
                 android:id="@+id/searchHereEdittext"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
+                android:background="@color/CoolGray"
                 android:hint="Search users"
                 android:textColor="@android:color/black" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -72,7 +72,8 @@
             android:layout_height="10dp"
             android:layout_marginHorizontal="16dp"
             android:alpha="0"
-            android:background="@drawable/edittext_style"
+            android:backgroundTint="@color/CoolGray"
+            android:background="@drawable/background_rounded_map"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="3dp"
@@ -128,12 +129,13 @@
         tools:visibility="visible"
         android:layout_height="30dp"
         android:layout_marginTop="8sp"
-        android:background="@drawable/background_okay"
+        android:background="@drawable/rebranding_rounded_black"
+        android:textColor="@color/white"
         android:foreground="?selectableItemBackground"
         android:gravity="center"
         android:text="okay"
         android:layout_marginHorizontal="10dp"
-        android:textColor="@color/black"
+
         android:textSize="17sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@+id/motionId"

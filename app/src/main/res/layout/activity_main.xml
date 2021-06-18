@@ -5,17 +5,114 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        tools:visibility="visible"
+        android:visibility="gone"
+        android:background="@color/Gray2"
+        android:id="@+id/settingsContainer"
+        android:orientation="vertical"
+        android:layout_height="match_parent"
+        tools:context=".ui.settings.MySettingsFragment">
+
+        <TextView
+            android:id="@+id/changeIdTxt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unique id"
+            android:background="@drawable/edittext_style"
+            android:backgroundTint="@color/white_msg"
+            android:layout_marginTop="5dp"
+            android:layout_marginHorizontal="10dp"
+            android:textSize="19dp"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/uniqueId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:maxLines="1"
+            android:layout_marginStart="4dp"
+            android:ellipsize="end"
+            android:text="change your unique id"
+
+            android:drawableStart="@drawable/ic_edit"
+            android:drawablePadding="6dp"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="RtlSymmetry"
+           />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:textSize="19dp"
+            android:background="@drawable/edittext_style"
+            android:backgroundTint="@color/white_msg"
+            android:textColor="@color/black"
+            android:layout_height="wrap_content"
+            android:text="Notifications" />
+
+        <CheckedTextView
+            android:id="@+id/vibrate_checked"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checkMarkTint="@color/colorPrimary"
+            android:checkMark="?android:attr/textCheckMark"
+            android:gravity="center"
+            android:paddingEnd="10dp"
+            android:paddingLeft="5dp"
+
+            android:text="Enable vibration on notifications"
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
+        <View
+            android:background="@color/edit_icon"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"/>
+        <Switch
+            android:id="@+id/sound_switch"
+            android:layout_width="match_parent"
+            android:layout_height="41dp"
+
+            android:paddingEnd="10dp"
+            android:paddingLeft="5dp"
+            android:text="Sound on notification"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+            <View
+            android:background="@color/edit_icon"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"/>
+
+
+
+    </LinearLayout>
+
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:backgroundTint="@color/white"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
+
     <FrameLayout
         android:id="@+id/frameLayout_main"
         android:layout_width="match_parent"
@@ -26,3 +123,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
+<!--    android:theme="@style/SwitchTheme"-->
+<!--    android:trackTint="@color/red"-->
+<!--    android:backgroundTint="@color/red"-->
