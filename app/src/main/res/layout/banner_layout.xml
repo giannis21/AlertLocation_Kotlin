@@ -7,7 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     app:cardCornerRadius="12dp"
     android:elevation="10dp"
-    android:backgroundTint="@color/LightRed">
+    android:backgroundTint="@color/success_color">
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,8 +15,6 @@
         android:padding="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

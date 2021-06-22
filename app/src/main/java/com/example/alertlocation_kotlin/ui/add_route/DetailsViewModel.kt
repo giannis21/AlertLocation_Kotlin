@@ -1,17 +1,21 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
 import android.content.Context
+import android.os.Bundle
 import androidx.lifecycle.*
 import com.example.alertlocation_kotlin.RemoteRepository
 import com.example.alertlocation_kotlin.data.model.Points
 import com.example.alertlocation_kotlin.data.model.Route
 import com.example.alertlocation_kotlin.data.model.User
+import com.example.alertlocation_kotlin.data.model.pushNotification.NotificationData
+import com.example.alertlocation_kotlin.data.model.pushNotification.PushNotification
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocationkotlin.*
 import com.google.firebase.database.*
-import kotlinx.android.synthetic.main.fragment_username.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class DetailsViewModel(
@@ -22,14 +26,16 @@ class DetailsViewModel(
 
 
     var transitionToEnd= MutableLiveData<Boolean?>(null)
-    var route_name: MutableLiveData<String>? = null
+
     var message: String =""
     var usersToSend = MutableLiveData<MutableList<User>>()
     var myCurrentLocation = MutableLiveData<String?>(null)
     var pointsList = MutableLiveData<MutableList<Points>>()
     var addressSelected = MutableLiveData<Points?>(null)
     var allRoutes: LiveData<MutableList<Route>>
-
+    var notificationDeepLink= MutableLiveData<Boolean>(false)
+    var notificationBundle = MutableLiveData<Bundle?>()
+    var uniqueIdRetrieved= MutableLiveData<String?>(null)
     var groupNotificationKey=MutableLiveData<String?>(null)
     init{
         allRoutes = mainRepository.getAll().asLiveData()
@@ -124,12 +130,12 @@ class DetailsViewModel(
 
     }
 
-    fun sendPushNotification(route: Route) {
+    fun sendPushNotification(route: Route, sender: String, point: Points) {
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
                 remoteRepository.postNotification(
                     PushNotification(
-                        NotificationData(route.message, route.RouteName),
+                        NotificationData(route.message, route.RouteName,getDate(),sender,getPointsString(point.latitude,point.longitude)),
                         route.notificationGroupId
                     )
                 )
@@ -140,6 +146,15 @@ class DetailsViewModel(
             }//https://firebase.google.com/docs/cloud-messaging/android/device-group?utm_source=studio
 
         }
+    }
+
+    private fun getPointsString(latitude: Double, longitude: Double):String{
+         return "($latitude,$longitude)"
+   }
+
+    private fun getDate(): String {
+        val sdf = SimpleDateFormat("HH:mm:ss")
+        return sdf.format(Date())
     }
 
     fun removeItem(route: Route) {
@@ -155,13 +170,7 @@ class DetailsViewModel(
         }
     }
 
-    fun updateUniqueId(
-        uniqueUsername: String,
-        token: String,
-        update: Boolean,
-        previusId:String?=null,
-        successCallback: ((Boolean) -> Unit)
-    ) {
+    fun updateUniqueId(uniqueUsername: String, token: String, update: Boolean, previusId:String?=null, successCallback: ((Boolean) -> Unit)) {
         val database = FirebaseDatabase.getInstance()
         val myRef = database.getReference("Users")
         val firebaseSearchQuery: Query = myRef.child(uniqueUsername)
@@ -171,7 +180,7 @@ class DetailsViewModel(
                 if (!dataSnapshot.exists()) {
 
                     if (update) {
-                        myRef.child(uniqueUsername).removeValue()
+                        myRef.child(previusId!!).removeValue()
                         myRef.child(uniqueUsername).setValue(User(uniqueUsername, token))
 //                        val updates: MutableMap<String, Any> = HashMap()
 //                        updates["username"] = uniqueUsername

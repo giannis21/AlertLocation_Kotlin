@@ -13,20 +13,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.alertlocation_kotlin.*
-import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
-import com.example.alertlocation_kotlin.data.repositories.mainRepository
-import com.example.alertlocationkotlin.NotificationApi
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -48,11 +43,16 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private lateinit var viewModel: DetailsViewModel
     private lateinit var viewModelFactory: ViewmodelFactory
     private lateinit var motionId: MotionLayout
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        bottomsheetOpened=true
+    }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
@@ -77,6 +77,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         return inflater.inflate(R.layout.bottomsheet_configuration, container, false);
     }
 
@@ -84,19 +85,12 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        requireActivity().window.navigationBarColor =
-            ContextCompat.getColor(requireContext(), R.color.white)
+        val fromAdapter =  arguments?.getString("fromAdapter")
+        requireActivity().window.navigationBarColor = ContextCompat.getColor(requireContext(), R.color.white)
 
-        val networkConnectionIncterceptor =
-            this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
-        val webService = NotificationApi(networkConnectionIncterceptor!!)
-        val remoteRepository = RemoteRepository(webService)
-        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory =
-            ViewmodelFactory(mainRepository(routeDao), remoteRepository, requireContext())
-        viewModel =
-            ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
+        viewModel = (activity as MainActivity).viewModel
         viewModel.pointsList.value?.clear()
+
         initviewpager()
 
         closeIcon.setOnClickListener {
@@ -116,7 +110,7 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
             it?.let {
                 viewModel.addRouteToDatabase(
                     Route(
-                        0, "change name",
+                        0, "#name",
                         viewModel.usersToSend.value ?: mutableListOf(),
                         viewModel.pointsList.value ?: mutableListOf(), viewModel.message, it
                     )
@@ -208,24 +202,13 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
         // tabLayoutMediator.detach()
         tabLayout.addTab(tabLayout.newTab().setText("Map"), 1)
         tabs.add(1, Pair("Map", fragments[1]))
-        if (viewModel.addressSelected.value != null)
+        if (viewModel.addressSelected.value != null || viewModel.notificationDeepLink.value==true)
             tabLayout.apply {
                 selectTab(getTabAt(1))
             }
+
         viewPagerAdapter.notifyDataSetChanged()
 
-        val tabs = tabLayout.getChildAt(0) as ViewGroup
-
-//        for (i in 0 until tabs.childCount ) {
-//            val tab = tabs.getChildAt(i)
-//            val layoutParams = tab.layoutParams as LinearLayout.LayoutParams
-//            layoutParams.weight = 0f
-//            layoutParams.marginEnd = 12
-//            layoutParams.marginStart = 12
-//
-//            tab.layoutParams = layoutParams
-//            tabLayout.requestLayout()
-//        }
     }
 
     class ViewPagerFragmentAdapter(
@@ -271,10 +254,13 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        bottomsheetOpened=false
         DetailsFragment.clearValuesListener?.invoke()
         viewModel.groupNotificationKey.postValue(null)
-        viewModel.transitionToEnd?.postValue(null)
+        viewModel.transitionToEnd.postValue(null)
         viewModel.addressSelected.postValue(null)
+        viewModel.notificationDeepLink.postValue(false)
+        viewModel.notificationBundle.postValue(null)
     }
 
     fun showBanner(value: String, success: Boolean = false) {
@@ -305,5 +291,6 @@ class ConfigurationBottomSheetDialogFragment : BottomSheetDialogFragment() {
     companion object {
         @JvmStatic
         fun newInstance() = ConfigurationBottomSheetDialogFragment()
+        var bottomsheetOpened=false
     }
 }

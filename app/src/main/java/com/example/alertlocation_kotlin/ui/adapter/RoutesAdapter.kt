@@ -114,7 +114,7 @@ class RoutesAdapter(
                   }
                   recycler.layoutManager = LinearLayoutManager(
                       context,
-                      LinearLayoutManager.HORIZONTAL,
+                      LinearLayoutManager.VERTICAL,
                       false
                   )
                   recycler.adapter = adapter

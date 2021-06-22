@@ -1,6 +1,4 @@
-package com.example.alertlocation_kotlin
-
-import com.example.alertlocationkotlin.Data
+package com.example.alertlocation_kotlin.data.model.notification_to_group_id
 
 data class Group_DataNotification(
 //    val notification: Data,

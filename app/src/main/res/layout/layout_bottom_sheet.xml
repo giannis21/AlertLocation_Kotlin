@@ -37,7 +37,7 @@
                     app:boxBackgroundColor="@android:color/transparent"
                     android:background="@android:color/transparent"
                     android:layout_height="wrap_content"
-                    android:hint="Type a friendly name.." />
+                   />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView

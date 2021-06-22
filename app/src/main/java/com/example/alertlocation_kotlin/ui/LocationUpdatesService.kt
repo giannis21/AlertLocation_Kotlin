@@ -19,6 +19,7 @@ import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_ID
 import com.example.alertlocation_kotlin.Constants.Companion.UPDATE_INTERVAL_IN_MILLISECONDS
 import com.example.alertlocation_kotlin.MainActivity
 import com.example.alertlocation_kotlin.R
+import com.example.alertlocation_kotlin.ext.Utils
 import com.google.android.gms.location.*
 import java.util.*
 

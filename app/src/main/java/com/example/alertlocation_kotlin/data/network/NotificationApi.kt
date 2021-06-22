@@ -1,10 +1,13 @@
-package com.example.alertlocationkotlin
+package com.example.alertlocation_kotlin.data.network
 
 import com.example.alertlocation_kotlin.Constants
 import com.example.alertlocation_kotlin.Constants.Companion.BASE_URL
-import com.example.alertlocation_kotlin.Group_DataNotification
+import com.example.alertlocation_kotlin.data.model.notification_to_group_id.Group_DataNotification
 import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
- import okhttp3.Interceptor
+import com.example.alertlocation_kotlin.data.model.pushNotification.PushNotification
+import com.example.alertlocationkotlin.DataGroupResponse
+import com.example.alertlocationkotlin.Group
+import com.example.alertlocationkotlin.NotificationGroupResponse
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
@@ -23,7 +26,7 @@ interface NotificationApi {
 
     @Headers("Authorization: key=${Constants.SERVER_KEY}","Content-Type:${Constants.CONTENT_TYPE}","project_id:939355020609")
     @POST("fcm/notification")
-    suspend fun createGroupNotification(@Body notificationGroup: Group):Response<NotificationGroupResponse>
+    suspend fun createGroupNotification(@Body notificationGroup: Group):Response<NotificationGroupResponse>  //it returns a group id in order to send message in all registration ids
 
     @Headers("Authorization: key=${Constants.SERVER_KEY}","Content-Type:${Constants.CONTENT_TYPE}")
     @POST("fcm/send")

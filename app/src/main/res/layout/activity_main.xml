@@ -22,20 +22,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Unique id"
-            android:background="@drawable/edittext_style"
+            android:textStyle="bold"
             android:backgroundTint="@color/white_msg"
             android:layout_marginTop="5dp"
             android:layout_marginHorizontal="10dp"
-            android:textSize="19dp"
+            android:padding="5dp"
+            android:textSize="14sp"
             android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.1dp"
+            android:background="@color/colorPrimary"/>
         <TextView
             android:id="@+id/uniqueId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="5dp"
+            android:padding="7dp"
+            android:textSize="19sp"
             android:maxLines="1"
             android:layout_marginStart="4dp"
             android:ellipsize="end"
@@ -44,7 +50,7 @@
             android:drawableStart="@drawable/ic_edit"
             android:drawablePadding="6dp"
             android:textColor="@color/black"
-            android:textSize="14sp"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,13 +62,17 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
-            android:textSize="19dp"
-            android:background="@drawable/edittext_style"
+            android:padding="5dp"
+            android:textSize="14dp"
+            android:textStyle="bold"
             android:backgroundTint="@color/white_msg"
             android:textColor="@color/black"
             android:layout_height="wrap_content"
             android:text="Notifications" />
-
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.1dp"
+            android:background="@color/colorPrimary"/>
         <CheckedTextView
             android:id="@+id/vibrate_checked"
             android:layout_width="match_parent"
@@ -75,11 +85,8 @@
 
             android:text="Enable vibration on notifications"
             android:textColor="@android:color/black"
-            android:textSize="14sp" />
-        <View
-            android:background="@color/edit_icon"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"/>
+            android:textSize="19sp" />
+
         <Switch
             android:id="@+id/sound_switch"
             android:layout_width="match_parent"
@@ -90,10 +97,7 @@
             android:text="Sound on notification"
             android:textColor="@android:color/black"
             android:textSize="18sp" />
-            <View
-            android:background="@color/edit_icon"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"/>
+
 
 
 
@@ -118,6 +122,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="18dp"
+        android:layout_marginTop="16dp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

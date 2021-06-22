@@ -7,8 +7,6 @@ import android.content.*
 import android.content.ClipData
 import android.content.Context.CLIPBOARD_SERVICE
 import android.content.pm.PackageManager
-import android.location.Address
-import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.IBinder
@@ -16,13 +14,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.animation.doOnEnd
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -34,25 +30,19 @@ import com.example.alertlocation_kotlin.Constants.Companion.ACTION_START_OR_RESU
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
 import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOC_STOPED
 import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Route
-import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ext.SharedFunctions.getAddress
 import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.adapter.SwipeToDeleteCallback
 import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment
+import com.example.alertlocation_kotlin.ui.add_route.ConfigurationBottomSheetDialogFragment.Companion.bottomsheetOpened
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
-import com.example.alertlocationkotlin.NotificationApi
+import com.example.alertlocationkotlin.FirebaseService
 
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.textfield.TextInputLayout
-import kotlinx.android.synthetic.main.details_fragment.*
 import kotlinx.android.synthetic.main.fragment_main_screen.*
-import java.io.IOException
-import java.util.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -99,36 +89,52 @@ class MainScreenFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.fragment_main_screen, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         myReceiver=MyReceiver()
-        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
-        val webService = NotificationApi(networkConnectionIncterceptor!!)
-        val remoteRepository = RemoteRepository(webService)
-        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
-        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
+        viewModel = (activity as MainActivity).viewModel
+
+        if(viewModel.notificationDeepLink.value==true) {
+            println("viewmodel value = ${viewModel.notificationDeepLink.value}")
+            val dialogFragment = ConfigurationBottomSheetDialogFragment()
+            val bundle = Bundle()
+            bundle.putString("fromAdapter", "true")
+            dialogFragment.arguments = bundle
+            dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+
+        }
 
         routesAdapter= RoutesAdapter({
-            viewModel.addressSelected.postValue(it)
-            val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
-            dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+            if(!bottomsheetOpened){
+                viewModel.addressSelected.postValue(it)
+
+                val dialogFragment = ConfigurationBottomSheetDialogFragment()
+                val bundle = Bundle()
+                bundle.putString("fromAdapter", "true")
+                dialogFragment.arguments = bundle
+                dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+            }
+
         },requireContext(), viewModel)
+
         routesRecyclerview.adapter=routesAdapter
         linearLayoutManager = LinearLayoutManager(requireContext())
         routesRecyclerview.layoutManager = linearLayoutManager
-        //initSwipe()
+        initSwipe()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         floatingActionButton.setOnClickListener {
-            if(checkLocationPermission()){
-                val dialogFragment: ConfigurationBottomSheetDialogFragment = ConfigurationBottomSheetDialogFragment.newInstance()
-                dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+            if(checkLocationPermission()) {
+                if (!bottomsheetOpened) {
+                    val dialogFragment: ConfigurationBottomSheetDialogFragment =
+                        ConfigurationBottomSheetDialogFragment.newInstance()
+                    dialogFragment.show(requireActivity().supportFragmentManager, "Bottomsheet")
+                }
             }
 
         }
@@ -209,15 +215,14 @@ class MainScreenFragment : Fragment() {
             try {
                 it?.let {
                     if (it.isNotEmpty()) {
-                        myClipboard =
-                            requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
+                        myClipboard = requireContext().getSystemService(CLIPBOARD_SERVICE) as ClipboardManager?
                         myClip = ClipData.newPlainText("text", it)
                         myClip?.let { _ ->
                             myClipboard!!.setPrimaryClip(myClip!!)
                             (activity as MainActivity).showBanner("$it Copied",true)
                         }
                     } else {
-                        (activity as MainActivity).showBanner("Something went wrong, try again!",true)
+                        (activity as MainActivity).showBanner("Something went wrong, try again!")
                     }
                 }
             } catch (e: Exception) {
@@ -291,7 +296,7 @@ class MainScreenFragment : Fragment() {
                 val position = viewHolder.adapterPosition
                 val route =routesAdapter.getItem1(position)
                 viewModel.removeItem(route)
-                (activity as MainActivity).showBanner("Route succesfully deleted!")
+                (activity as MainActivity).showBanner("Route succesfully deleted!",true)
             }
         }
         val itemTouchHelper = ItemTouchHelper(swipeHandler)
@@ -326,13 +331,13 @@ class MainScreenFragment : Fragment() {
                     location_set_byUser.longitude = point.longitude
                     val distanceInMeters: Float = current_location.distanceTo(location_set_byUser)
 
-                    if (distanceInMeters < 50) {
+                     if (distanceInMeters < 50) {
                         mRoute?.let {
-                            viewModel.sendPushNotification(it)
+                            viewModel.sendPushNotification(it,FirebaseService.uniqueId ?: "",point)
                             disableSwitch()
                             stopService()
                         }
-                    }
+                     }
                 }
 
             }

@@ -24,9 +24,9 @@ object BindingAdapter {
     fun ConstraintLayout.setColor(isEnabled: Boolean) {
 
         if(isEnabled)
-            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.teal_700))
+            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.colorPrimary))
          else
-            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.white_msg))
+            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.colorPrimaryDark))
 
     }
 

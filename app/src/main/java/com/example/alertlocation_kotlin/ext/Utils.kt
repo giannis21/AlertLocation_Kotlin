@@ -1,10 +1,8 @@
-package com.example.alertlocation_kotlin.ui
+package com.example.alertlocation_kotlin.ext
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.location.Location
 import android.preference.PreferenceManager
-import androidx.core.content.edit
 import com.example.alertlocation_kotlin.R
 import java.text.DateFormat
 import java.util.*
@@ -13,6 +11,7 @@ import java.util.*
 object Utils {
 
     const val  KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
+
 
     fun requestingLocationUpdates(context: Context): Boolean {
         return PreferenceManager.getDefaultSharedPreferences(context)

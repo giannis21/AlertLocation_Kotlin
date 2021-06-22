@@ -18,4 +18,6 @@
     <string name="location_updated">Location Updated: %1$s</string>
     <string name="this_unique_id_exists_try_another_one">This unique id exists, try another one!</string>
     <string name="type_a_unique_id">Type a unique id..</string>
+    <string name="user_passed_time"><![CDATA[User with id <b><u>%1$s</u></b> passed through this location in <b><u>%2$s!</u></b>]]></string>
+
 </resources>

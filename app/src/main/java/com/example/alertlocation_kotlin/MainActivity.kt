@@ -9,34 +9,27 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
+import com.example.alertlocation_kotlin.data.network.NotificationApi
 import com.example.alertlocation_kotlin.data.repositories.mainRepository
-import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 import com.example.alertlocationkotlin.*
+import com.example.alertlocationkotlin.FirebaseService.Companion.isRinging
+import com.example.alertlocationkotlin.FirebaseService.Companion.isVibrate
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
- import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.banner_layout.view.*
-import kotlinx.android.synthetic.main.fragment_username.*
-
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: DetailsViewModel
+    lateinit var viewModel: DetailsViewModel
     private lateinit var viewModelFactory: ViewmodelFactory
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,31 +44,34 @@ class MainActivity : AppCompatActivity() {
         viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(DetailsViewModel::class.java)
 
-        //vibrate_checked.isChecked = PreferenceUtils.get_vibration_state(requireContext())!!
+        val deepLink= intent.extras
+        deepLink?.let {
+            if(deepLink["senderId"] !=null){
+                viewModel.notificationDeepLink.value=true
+                viewModel.notificationBundle.value= it
+
+            }
+        }
+
+
+
+       vibrate_checked.isChecked = isVibrate!!
 
 //------------------------------------------------ενεργο η οχι το SOUND notification state-----------------------------------------------//
 
-       // sound_switch.isChecked = PreferenceUtils.get_sound_state(requireContext())!!
+       sound_switch.isChecked = isRinging!!
 
 //------------------------------------------------αλλαγη καταστασης του vibration και αποθηκευση ----------------------------------//
         vibrate_checked.setOnClickListener {
             vibrate_checked.isChecked = vibrate_checked.isChecked != true
-
-            if (vibrate_checked.isChecked) {
-               // PreferenceUtils.set_vibration_state(true, this)
-            } else {
-              //  PreferenceUtils.set_vibration_state(false, this)
-            }
+            isVibrate = vibrate_checked.isChecked
         }
 
         sound_switch.setOnClickListener {
-            if (sound_switch.isChecked) {
-             //   PreferenceUtils.set_sound_state(true, requireContext())
-            } else {
-             //   PreferenceUtils.set_sound_state(false, requireContext())
-            }
+            isRinging = sound_switch.isChecked
         }
-        uniqueId.setText(FirebaseService.uniqueId)
+        getFirebaseToken(false)
+        uniqueId.text = FirebaseService.uniqueId
         uniqueId.setOnClickListener {
             showDialog()
         }
@@ -85,8 +81,12 @@ class MainActivity : AppCompatActivity() {
 
         //FirebaseMessaging.getInstance().subscribeToTopic(TOPIC)
 
+        viewModel.uniqueIdRetrieved.observe(this, Observer {
+
+        })
     }
-    open fun showSettings(isShown:Boolean){
+
+    fun showSettings(isShown:Boolean){
         if(isShown)
             settingsContainer.visibility =View.VISIBLE
         else
@@ -100,20 +100,30 @@ class MainActivity : AppCompatActivity() {
         val view = inflater.inflate(R.layout.layout_bottom_sheet, null)
         dialog.setContentView(view)
         val editText  =dialog.findViewById<TextInputLayout>(R.id.textInputLayout)?.editText
+        if(id==null) {
+            editText?.hint = "Type a new unique id.."
+        }else{
+            editText?.hint = "Type a friendly name.."
+        }
+
+
         dialog.findViewById<TextView>(R.id.okayBtn)?.setOnClickListener {
             if(editText?.text?.isNotBlank()!!) {
                 id?.let {
                     viewModel.updateFriendlyName(id, editText.text.toString())
                     dialog.dismiss()
-                    showBanner("Route name updated succesfully!")
+                    showBanner("Route name updated succesfully!",true)
                 } ?:kotlin.run {
-                     viewModel.updateUniqueId(editText.text.toString(),FirebaseService.token ?: "",true,FirebaseService.uniqueId){
-                         if(it){
-                             FirebaseService.uniqueId= uniqueUsername.editText?.text.toString()
-                             uniqueId.text = FirebaseService.uniqueId
-                         }
+                     getFirebaseToken(true){
+                         viewModel.updateUniqueId(editText.text.toString(),FirebaseService.token ?: "",true,FirebaseService.uniqueId){
+                             if(it){
+                                 FirebaseService.uniqueId= editText?.text.toString()
+                                 uniqueId.text = FirebaseService.uniqueId
+                             }
 
+                         }
                      }
+
                 }
 
             }
@@ -134,17 +144,32 @@ class MainActivity : AppCompatActivity() {
                 if(!success){
                     cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(this, R.color.LightRed)
                     cLayout.imageView.background = ContextCompat.getDrawable(this, R.drawable.ic_baseline_close_24)
-
                 }else{
                     cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(this, R.color.success_color)
                     cLayout.imageView.background = ContextCompat.getDrawable(this, R.drawable.ic_save)
                 }
+                cLayout.imageView.setColorFilter(ContextCompat.getColor(this, R.color.white), android.graphics.PorterDuff.Mode.MULTIPLY)
 
                 Handler(Looper.getMainLooper()).postDelayed({
                     cLayout.removeView(view)
                 }, 4000)
             }
         }
+    }
+
+    fun getFirebaseToken(changeToken: Boolean,callback:(() -> Unit)?=null) {
+        FirebaseInstallations.getInstance().getToken(changeToken)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    FirebaseService.token = task.result?.token
+                    if(changeToken){
+                        callback?.invoke()
+                    }
+                } else {
+                    Log.e("Installations", "Unable to get Installation auth token")
+                }
+            }
     }
 
 }

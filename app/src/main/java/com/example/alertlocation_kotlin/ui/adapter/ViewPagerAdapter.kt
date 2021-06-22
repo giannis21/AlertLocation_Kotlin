@@ -6,24 +6,6 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.firebase.database.annotations.NotNull
 
 
-//class ViewPagerAdapter(manager: FragmentManager) : FragmentStateAdapter(
-//    manager,
-//    BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
-//) {
-//    override fun getItem(position: Int): Fragment  {
-//
-//        return when (position) {
-//            0 -> DetailsFragment()
-//            1 -> MapsFragment()
-//            else -> DetailsFragment()
-//        }
-//    }
-//
-//    // this counts total number of tabs
-//    override fun getCount(): Int {
-//        return 2
-//    }
-//}
 class ViewPagerAdapter(fa: FragmentActivity?, list: List<Fragment>) : FragmentStateAdapter(fa!!) {
     private var listFragment: List<Fragment> = ArrayList()
 

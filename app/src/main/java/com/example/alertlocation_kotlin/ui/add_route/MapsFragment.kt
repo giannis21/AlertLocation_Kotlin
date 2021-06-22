@@ -2,22 +2,19 @@ package com.example.alertlocation_kotlin.ui.add_route
 
 import android.animation.ObjectAnimator
 import android.content.IntentSender
-import android.location.Address
-import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.Points
-import com.example.alertlocation_kotlin.data.repositories.mainRepository
-import com.example.alertlocationkotlin.NotificationApi
+import com.example.alertlocation_kotlin.ext.SharedFunctions.getAddress
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,8 +26,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
 import kotlinx.android.synthetic.main.fragment_maps.*
-import java.io.IOException
-import java.util.*
 
 
 class MapsFragment : Fragment(), OnMapReadyCallback {
@@ -40,7 +35,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private var permissionGranted = false
     private lateinit var mGoogleMap: GoogleMap
     private lateinit var viewModel: DetailsViewModel
-    private lateinit var viewModelFactory: ViewmodelFactory
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -60,19 +55,13 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         mapFragment?.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
-        val webService = NotificationApi(networkConnectionIncterceptor!!)
-        var remoteRepository = RemoteRepository(webService)
-        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
-        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
 
-
-
+        viewModel = (activity as MainActivity).viewModel
 
         findMe.setOnClickListener {
             find_Me()
         }
+
         add_points.setOnClickListener {
             if (add_points_flag) {
                 add_points.alpha = 0.15f
@@ -93,8 +82,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun find_Me() {
-
-
 
             mGoogleMap.isMyLocationEnabled = true
             mGoogleMap.uiSettings.isMyLocationButtonEnabled = false
@@ -138,61 +125,19 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun navigate_to_coordinates(location: LatLng, addMarker: Boolean = false) {
         if (addMarker){
-
-            val title=getAddress(location.latitude,location.longitude)
-            mGoogleMap.addMarker(
-                MarkerOptions()
-                    .position(location)
-                    .title(title)
-                    //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
-                    .icon(
-                        BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                    )
-            )
+            addMarker(location, getAddress(requireContext(),location.latitude,location.longitude))
         }
 
+        animateCamera(LatLng(location.latitude, location.longitude))
 
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(location))
-        mGoogleMap.animateCamera(
-            CameraUpdateFactory.newLatLngZoom(
-                LatLng(
-                    location.latitude,
-                    location.longitude
-                ), 15.0f
-            )
-        )
     }
-    private fun getAddress(lat: Double, lon: Double): String {
 
-        var addresses: List<Address> = emptyList()
-        val geocoder = Geocoder(activity?.applicationContext, Locale.getDefault())
-        try {
-            addresses = geocoder.getFromLocation(lat, lon, 1)
-        } catch (ioException: IOException) {
-            return ""
-        } catch (illegalArgumentException: IllegalArgumentException) {
-            return ""
-        }
-
-        // Handle case where no address was found.
-        return if (addresses.isEmpty()) {
-            ""
-        } else {
-            val address = addresses[0]
-
-            val addressFragments = with(address) {
-                (0..maxAddressLineIndex).map { getAddressLine(it) }
-            }
-            addressFragments.joinToString(separator = "\n")
-        }
-    }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
         mGoogleMap.setOnMapClickListener {
             if (!add_points_flag) {
-                val title = getAddress(it.latitude,it.longitude)
+                val title = getAddress(requireContext(),it.latitude,it.longitude)
                 if(viewModel.pointsList.value?.size == 3)
                 {
                     Toast.makeText(requireContext(),"You cannot add more than three points!",Toast.LENGTH_SHORT).show()
@@ -200,50 +145,69 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                 }
 
                 viewModel.addPoint(Points(it.latitude,it.longitude,title))
-                mGoogleMap.addMarker(
-                    MarkerOptions()
-                        .position(it).title(title)
-                        //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location))
-                        .icon(
-                            BitmapDescriptorFactory
-                                .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                        )
-                )
+                addMarker(it, title)
                 floatingActionButton.visibility = View.VISIBLE
             }
         }
-        if(viewModel.addressSelected.value !=null){
+        if(viewModel.addressSelected.value !=null ){
+
             actionsContainer.visibility=View.GONE
-            val lat=viewModel.addressSelected.value!!.latitude
-            val long= viewModel.addressSelected!!.value!!.longitude
-            val address= viewModel.addressSelected.value!!.address
-            val latLng=LatLng(lat,long)
-            mGoogleMap.addMarker(
-                MarkerOptions()
-                    .position(latLng)
-                    .title(address)
-                    //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
-                    .icon(
-                        BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                    )
-            )
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-            mGoogleMap.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                    LatLng(
-                        lat,
-                        long
-                    ), 15.0f
-                )
-            )
-        }else{
+            val latLng=LatLng(viewModel.addressSelected.value!!.latitude,viewModel.addressSelected.value!!.longitude)
+            addMarker(latLng, viewModel.addressSelected.value!!.address)
+            animateCamera(latLng)
+
+        }else if(viewModel.notificationDeepLink.value==true){
+            val latLng=getDeeplinkLocation()
+            addMarker(latLng,color="red")
+            animateCamera(latLng)
+
+            banner.visibility=View.VISIBLE
+            val bannerTxt= banner.findViewById<TextView>(R.id.redBannerTxtV)
+            bannerTxt.text= HtmlCompat.fromHtml(
+                getString(R.string.user_passed_time, viewModel.notificationBundle.value?.get("senderId").toString(),viewModel.notificationBundle.value?.get("timeSent").toString()),HtmlCompat.FROM_HTML_MODE_LEGACY)
+
+        }
+
+
+        else{
 
             val anim = ObjectAnimator.ofFloat(actionsContainer, "translationX", 90f, 0f)
             anim.duration = 2000
             anim.start()
         }
 
+    }
+
+    private fun animateCamera(latLng: LatLng) {
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+        mGoogleMap.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(latLng, 15.0f)
+        )
+    }
+
+    private fun addMarker(location: LatLng, title: String?=null,color: String ="blue") {
+
+        mGoogleMap.addMarker(
+            MarkerOptions()
+                .position(location)
+                .title(title ?: "" )
+                //.icon(BitmapDescriptorFactory.fromResource(R.drawable.location_marker))
+                .icon(
+                    if(color == "blue")
+                     BitmapDescriptorFactory
+                        .defaultMarker(BitmapDescriptorFactory.HUE_AZURE) else BitmapDescriptorFactory
+                        .defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                )
+        )
+    }
+
+    private fun getDeeplinkLocation(): LatLng {
+        val tempLocation= viewModel.notificationBundle.value?.get("userLocation").toString()
+        var a =tempLocation
+        val lat= tempLocation.substring(1,tempLocation.indexOf(","))
+        val long= tempLocation.substring(tempLocation.indexOf(",")+1,tempLocation.length-1)
+
+        return LatLng(lat.toDouble(),long.toDouble())
     }
 
 }

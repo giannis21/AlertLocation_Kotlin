@@ -9,9 +9,12 @@
         android:id="@+id/usernameFragment"
         android:name="com.example.alertlocation_kotlin.ui.UsernameFragment"
         android:label="fragment_username"
+
         tools:layout="@layout/fragment_username" >
         <action
             android:id="@+id/action_usernameFragment_to_mainScreenFragment"
+            app:popUpToInclusive="true"
+            app:popUpTo="@+id/usernameFragment"
             app:destination="@id/mainScreenFragment" />
     </fragment>
     <fragment

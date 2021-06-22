@@ -2,31 +2,18 @@ package com.example.alertlocation_kotlin.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
-import com.example.alertlocation_kotlin.data.model.User
-import com.example.alertlocation_kotlin.data.repositories.mainRepository
 import com.example.alertlocation_kotlin.ui.add_route.DetailsViewModel
 import com.example.alertlocationkotlin.FirebaseService
-import com.example.alertlocationkotlin.NotificationApi
 
-import com.google.firebase.database.*
-import com.google.firebase.installations.FirebaseInstallations
 import kotlinx.android.synthetic.main.fragment_username.*
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -64,12 +51,8 @@ class UsernameFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
-        val webService = NotificationApi(networkConnectionIncterceptor!!)
-        var remoteRepository = RemoteRepository(webService)
-        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
-        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
+
+        viewModel = (activity as MainActivity).viewModel
 
         FirebaseService.sharedPref = context?.getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
 
@@ -77,15 +60,7 @@ class UsernameFragment : Fragment() {
         uniqueUsername.editText?.doAfterTextChanged {
             errorMsg.visibility=View.GONE
         }
-        FirebaseInstallations.getInstance().getToken(false)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("Installations", "Installation auth token: " + task.result?.token)
-                    FirebaseService.token = task.result?.token
-                } else {
-                    Log.e("Installations", "Unable to get Installation auth token")
-                }
-            }
+        (activity as MainActivity).getFirebaseToken(false)
         if(FirebaseService.token.toString().isNotEmpty()){
             findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
             return

@@ -1,8 +1,5 @@
 package com.example.alertlocation_kotlin.ui.add_route
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,26 +8,22 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.TextView
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
+import com.example.alertlocation_kotlin.*
 import com.example.alertlocation_kotlin.R
-import com.example.alertlocation_kotlin.RemoteRepository
-import com.example.alertlocation_kotlin.ViewmodelFactory
-import com.example.alertlocation_kotlin.data.database.RouteRoomDatabase
 import com.example.alertlocation_kotlin.data.model.User
-import com.example.alertlocation_kotlin.data.repositories.mainRepository
+import com.example.alertlocation_kotlin.ext.SharedFunctions.afterTextChanged
+import com.example.alertlocation_kotlin.ext.SharedFunctions.slideInLeft
+import com.example.alertlocation_kotlin.ext.SharedFunctions.slideOutLeft
 import com.example.alertlocation_kotlin.ui.adapter.UsersAdapter
-import com.example.alertlocationkotlin.NotificationApi
 
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
@@ -62,13 +55,7 @@ class DetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val networkConnectionIncterceptor = this.context?.applicationContext?.let { NetworkConnectionIncterceptor(it) }
-        val webService = NotificationApi(networkConnectionIncterceptor!!)
-        var remoteRepository = RemoteRepository(webService)
-        val routeDao = RouteRoomDatabase.getDatabase(requireContext()).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,requireContext())
-        viewModel = ViewModelProvider(requireActivity(), viewModelFactory).get(DetailsViewModel::class.java)
+        viewModel = (activity as MainActivity).viewModel
 
         viewModel.transitionToEnd?.observe(viewLifecycleOwner, Observer {
             it?.let {
@@ -126,10 +113,7 @@ class DetailsFragment : Fragment() {
         }
         val database = FirebaseDatabase.getInstance()
         val myRef = database.getReference("Users")
-        var user = User("giannis", "fcm1")
 
-        var user3 = User("giannis", "fcm1")
-        var user4 = User("kostas", "fcm1")
 
 
         recyclerview?.apply {
@@ -195,20 +179,7 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    private fun animateSaveIcon() {
-        linearLayout2.background = ContextCompat.getDrawable(requireContext(), R.drawable.background_message_saved)
-        linearLayout2.animate()
-        val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
-        valueAnimator.duration = 1000
-        valueAnimator.addUpdateListener { animation ->
-            val alpha = animation.animatedValue as Float
-            saved_icon.alpha = alpha
-        }
-        valueAnimator.doOnEnd {
-            linearLayout2.background = ContextCompat.getDrawable(requireContext(), R.drawable.background_message_saved)
-        }
-        valueAnimator.start()
-    }
+
 
     private fun addChips(users: MutableList<User>) {
 
@@ -249,38 +220,7 @@ class DetailsFragment : Fragment() {
         })
     }
 
-    fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
-        this.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(editable: Editable?) {
-                afterTextChanged.invoke(editable.toString())
-            }
-        })
-    }
 
-    fun View.slideInLeft(): AnimatorSet {
-        val animatorSet = AnimatorSet()
-        val parent = parent as ViewGroup
-        val distance = (parent.width - left).toFloat()
-
-        val object1: ObjectAnimator = ObjectAnimator.ofFloat(this, "alpha", 1f, 1f)
-        val object2: ObjectAnimator = ObjectAnimator.ofFloat(this, "translationX", -distance, 0f)
-
-        animatorSet.playTogether(object1, object2)
-        return animatorSet
-    }
-
-    fun View.slideOutLeft(): AnimatorSet {
-        val animatorSet = AnimatorSet()
-        val right = right.toFloat()
-
-        val object1: ObjectAnimator = ObjectAnimator.ofFloat(this, "alpha", 1f, 0f)
-        val object2: ObjectAnimator = ObjectAnimator.ofFloat(this, "translationX", 0f, -right)
-
-        animatorSet.playTogether(object1, object2)
-        return animatorSet
-    }
 
 
 }
