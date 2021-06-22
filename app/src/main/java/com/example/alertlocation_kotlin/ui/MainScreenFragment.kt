@@ -25,12 +25,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.alertlocation_kotlin.*
 
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_BROADCAST
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
-import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOCATION
-import com.example.alertlocation_kotlin.Constants.Companion.EXTRA_LOC_STOPED
+import com.example.alertlocation_kotlin.ext.Constants.Companion.ACTION_BROADCAST
+import com.example.alertlocation_kotlin.ext.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
+import com.example.alertlocation_kotlin.ext.Constants.Companion.EXTRA_LOCATION
+import com.example.alertlocation_kotlin.ext.Constants.Companion.EXTRA_LOC_STOPED
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocation_kotlin.data.model.Route
+import com.example.alertlocation_kotlin.ext.Constants
 import com.example.alertlocation_kotlin.ext.SharedFunctions.getAddress
 import com.example.alertlocation_kotlin.ui.adapter.RoutesAdapter
 import com.example.alertlocation_kotlin.ui.adapter.SwipeToDeleteCallback

@@ -1,7 +1,7 @@
 package com.example.alertlocation_kotlin.data.network
 
-import com.example.alertlocation_kotlin.Constants
-import com.example.alertlocation_kotlin.Constants.Companion.BASE_URL
+import com.example.alertlocation_kotlin.ext.Constants
+import com.example.alertlocation_kotlin.ext.Constants.Companion.BASE_URL
 import com.example.alertlocation_kotlin.data.model.notification_to_group_id.Group_DataNotification
 import com.example.alertlocation_kotlin.NetworkConnectionIncterceptor
 import com.example.alertlocation_kotlin.data.model.pushNotification.PushNotification

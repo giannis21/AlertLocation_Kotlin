@@ -1,4 +1,4 @@
-package com.example.alertlocation_kotlin
+package com.example.alertlocation_kotlin.ext
 
 class Constants {
     companion object {

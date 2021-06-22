@@ -6,37 +6,30 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
 import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.location.Location
 import android.os.Build
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 
-import com.androiddevs.runningappyt.other.TrackingUtility
-import com.example.alertlocation_kotlin.Constants
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_PAUSE_SERVICE
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_SHOW_TRACKING_FRAGMENT
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
-import com.example.alertlocation_kotlin.Constants.Companion.ACTION_STOP_SERVICE
-import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_CHANNEL_ID
-import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_CHANNEL_NAME
-import com.example.alertlocation_kotlin.Constants.Companion.NOTIFICATION_ID
+import com.example.alertlocation_kotlin.ext.Constants
+import com.example.alertlocation_kotlin.ext.Constants.Companion.ACTION_PAUSE_SERVICE
+import com.example.alertlocation_kotlin.ext.Constants.Companion.ACTION_START_OR_RESUME_SERVICE
+import com.example.alertlocation_kotlin.ext.Constants.Companion.ACTION_STOP_SERVICE
+import com.example.alertlocation_kotlin.ext.Constants.Companion.NOTIFICATION_CHANNEL_ID
+import com.example.alertlocation_kotlin.ext.Constants.Companion.NOTIFICATION_CHANNEL_NAME
 import com.example.alertlocation_kotlin.MainActivity
 import com.example.alertlocation_kotlin.R
 import com.example.alertlocationkotlin.CHANNEL_ID
 import com.google.android.gms.location.*
-import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.maps.model.LatLng
 
 typealias Polyline = MutableList<LatLng>

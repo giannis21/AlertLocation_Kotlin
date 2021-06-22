@@ -12,17 +12,17 @@ import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.*
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.alertlocation_kotlin.InitApp.Companion.instance
 import com.example.alertlocation_kotlin.MainActivity
 import com.example.alertlocation_kotlin.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.android.synthetic.main.details_fragment.*
 import kotlin.random.Random
 
 
@@ -63,6 +63,14 @@ class FirebaseService : FirebaseMessagingService() {
             }
             set(value) {
                 sharedPref?.edit()?.putBoolean("isRinging", value!!)?.apply()
+            }
+
+        var secondsForNotification: String?
+            get() {
+                return sharedPref?.getString("secondsForNotification", "5000")
+            }
+            set(value) {
+                sharedPref?.edit()?.putString("secondsForNotification", value!!)?.apply()
             }
     }
 
@@ -121,15 +129,18 @@ class FirebaseService : FirebaseMessagingService() {
             vibratePhone()
 
         if (isRinging!!)
-            playSound1()
+            playSound()
         notificationManager.createNotificationChannel(channel)
     }
 
-    fun playSound1() {
+    fun playSound() {
         try {
             val player = MediaPlayer.create(this, Settings.System.DEFAULT_ALARM_ALERT_URI)
             player.start()
-
+            player.isLooping=true
+            Handler(Looper.getMainLooper()).postDelayed({
+                player.stop()
+            }, secondsForNotification?.toLong()!!)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -140,7 +151,23 @@ class FirebaseService : FirebaseMessagingService() {
         val vibrator = instance.applicationContext.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= 26)
        // val vibrationEffect = VibrationEffect.createOneShot(HAPTIC_FEEDBACK_DURATION, VibrationEffect.DEFAULT_AMPLITUDE)
-        vibrator.vibrate(VibrationEffect.createOneShot(10000, VibrationEffect.DEFAULT_AMPLITUDE))
+    //
+        {
+            if(secondsForNotification == "20000"){
+                vibrator.vibrate(VibrationEffect.createOneShot(10000, VibrationEffect.DEFAULT_AMPLITUDE))
+                Handler(Looper.getMainLooper()).postDelayed({
+                    vibrator.vibrate(VibrationEffect.createOneShot(10000, VibrationEffect.DEFAULT_AMPLITUDE))
+                }, 10000)
+            }else{
+                vibrator.vibrate(VibrationEffect.createOneShot(secondsForNotification?.toLong()!!, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+
+
+
+         //   var pattern = longArrayOf(0, 500, 100, 500)
+          ///  var vibrator =  instance.applicationContext.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+         //   vibrator.vibrate(pattern , 5)
+        }
     }
 }
 

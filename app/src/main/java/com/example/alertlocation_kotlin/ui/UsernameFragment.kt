@@ -67,12 +67,16 @@ class UsernameFragment : Fragment() {
         }
         btnSend.setOnClickListener {
             viewModel.updateUniqueId(uniqueUsername.editText?.text.toString(),FirebaseService.token.toString(),false){
-                if(it) {
+                try
+                {
+                    if(it) {
                     FirebaseService.uniqueId= uniqueUsername.editText?.text.toString()
 
                     findNavController().navigate(R.id.action_usernameFragment_to_mainScreenFragment)
                 }else
                     errorMsg.visibility= View.VISIBLE
+                }catch (e:Exception){}
+
             }
 
         }

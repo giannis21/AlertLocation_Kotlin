@@ -8,7 +8,9 @@ import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.RadioButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -37,11 +39,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         FirebaseService.sharedPref = this?.getSharedPreferences("sharedPref", Context.MODE_PRIVATE)
 
-        val networkConnectionIncterceptor = this.applicationContext?.let { NetworkConnectionIncterceptor(it) }
+        val networkConnectionIncterceptor = this.applicationContext?.let { NetworkConnectionIncterceptor(
+            it
+        ) }
         val webService = NotificationApi(networkConnectionIncterceptor!!)
         val remoteRepository = RemoteRepository(webService)
         val routeDao = RouteRoomDatabase.getDatabase(this).routeDao()
-        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository,this)
+        viewModelFactory = ViewmodelFactory(mainRepository(routeDao), remoteRepository, this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(DetailsViewModel::class.java)
 
         val deepLink= intent.extras
@@ -52,10 +56,30 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+        when (FirebaseService.secondsForNotification) {
+            "5000" -> {
+                radio1.isChecked=true
+            }
+            "10000" -> {
+                radio2.isChecked=true
+            }
+            else -> {
+                radio3.isChecked=true
+            }
+        }
+
+        radioGroup.setOnCheckedChangeListener { radioGroup, checkedId ->
+
+            when (checkedId) {
+                radio1.id ->  FirebaseService.secondsForNotification = "5000"
+                radio2.id ->  FirebaseService.secondsForNotification = "10000"
+                radio3.id ->  FirebaseService.secondsForNotification = "20000"
+            }
+
+        }
 
 
-
-       vibrate_checked.isChecked = isVibrate!!
+        vibrate_checked.isChecked = isVibrate!!
 
 //------------------------------------------------ενεργο η οχι το SOUND notification state-----------------------------------------------//
 
@@ -76,9 +100,6 @@ class MainActivity : AppCompatActivity() {
             showDialog()
         }
 
-        ///when app is in foreground it works
-
-
         //FirebaseMessaging.getInstance().subscribeToTopic(TOPIC)
 
         viewModel.uniqueIdRetrieved.observe(this, Observer {
@@ -86,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    fun showSettings(isShown:Boolean){
+    fun showSettings(isShown: Boolean){
         if(isShown)
             settingsContainer.visibility =View.VISIBLE
         else
@@ -94,7 +115,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun showDialog(id: Long ?=null) {
+    fun showDialog(id: Long? = null) {
         val dialog = BottomSheetDialog(this)
         val inflater = this?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val view = inflater.inflate(R.layout.layout_bottom_sheet, null)
@@ -112,10 +133,15 @@ class MainActivity : AppCompatActivity() {
                 id?.let {
                     viewModel.updateFriendlyName(id, editText.text.toString())
                     dialog.dismiss()
-                    showBanner("Route name updated succesfully!",true)
+                    showBanner("Route name updated succesfully!", true)
                 } ?:kotlin.run {
                      getFirebaseToken(true){
-                         viewModel.updateUniqueId(editText.text.toString(),FirebaseService.token ?: "",true,FirebaseService.uniqueId){
+                         viewModel.updateUniqueId(
+                             editText.text.toString(),
+                             FirebaseService.token ?: "",
+                             true,
+                             FirebaseService.uniqueId
+                         ){
                              if(it){
                                  FirebaseService.uniqueId= editText?.text.toString()
                                  uniqueId.text = FirebaseService.uniqueId
@@ -142,13 +168,28 @@ class MainActivity : AppCompatActivity() {
                 cLayout.redBannerTxtV.text = value
 
                 if(!success){
-                    cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(this, R.color.LightRed)
-                    cLayout.imageView.background = ContextCompat.getDrawable(this, R.drawable.ic_baseline_close_24)
+                    cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(
+                        this,
+                        R.color.LightRed
+                    )
+                    cLayout.imageView.background = ContextCompat.getDrawable(
+                        this,
+                        R.drawable.ic_baseline_close_24
+                    )
                 }else{
-                    cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(this, R.color.success_color)
-                    cLayout.imageView.background = ContextCompat.getDrawable(this, R.drawable.ic_save)
+                    cLayout.cardView.backgroundTintList = ContextCompat.getColorStateList(
+                        this,
+                        R.color.success_color
+                    )
+                    cLayout.imageView.background = ContextCompat.getDrawable(
+                        this,
+                        R.drawable.ic_save
+                    )
                 }
-                cLayout.imageView.setColorFilter(ContextCompat.getColor(this, R.color.white), android.graphics.PorterDuff.Mode.MULTIPLY)
+                cLayout.imageView.setColorFilter(
+                    ContextCompat.getColor(this, R.color.white),
+                    android.graphics.PorterDuff.Mode.MULTIPLY
+                )
 
                 Handler(Looper.getMainLooper()).postDelayed({
                     cLayout.removeView(view)
@@ -157,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun getFirebaseToken(changeToken: Boolean,callback:(() -> Unit)?=null) {
+    fun getFirebaseToken(changeToken: Boolean, callback: (() -> Unit)? = null) {
         FirebaseInstallations.getInstance().getToken(changeToken)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
